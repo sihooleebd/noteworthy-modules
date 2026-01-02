@@ -302,12 +302,13 @@
 
     // Use label-anchor if specified, otherwise default to north
     let anchor = obj.at("label-anchor", default: "north")
+    let padding = obj.at("label-padding", default: 0.2)
 
     content(
       coords,
       text(fill: stroke-col, format-label(obj, obj.label)),
       anchor: anchor,
-      padding: 0.2,
+      padding: padding,
       fill: bg-col,
       stroke: none,
     )
@@ -332,12 +333,13 @@
       ((p1.at(0) + p2.at(0)) / 2, (p1.at(1) + p2.at(1)) / 2, (p1.at(2) + p2.at(2)) / 2)
     }
     let anchor = obj.at("label-anchor", default: "north")
+    let padding = obj.at("label-padding", default: 0.2)
 
     content(
       mid,
       text(fill: theme.plot.stroke, format-label(obj, obj.label)),
       anchor: anchor,
-      padding: 0.1,
+      padding: padding,
     )
   }
 }
@@ -430,11 +432,12 @@
     let bg-col = theme.at("page-fill", default: none)
     let mid = ((p1.at(0) + p2.at(0)) / 2, (p1.at(1) + p2.at(1)) / 2)
     let anchor = obj.at("label-anchor", default: "north")
+    let padding = obj.at("label-padding", default: 0.2)
     content(
       mid,
       text(fill: theme.plot.stroke, obj.label),
       anchor: anchor,
-      padding: 0.1,
+      padding: padding,
       fill: bg-col,
       stroke: none,
     )
@@ -795,12 +798,13 @@
     }
 
     let anchor = obj.at("label-anchor", default: "north")
+    let padding = obj.at("label-padding", default: 0.2)
 
     content(
       label-pos,
       text(fill: theme.plot.stroke, format-label(obj, obj.label)),
       anchor: anchor,
-      padding: 0.15,
+      padding: padding,
       fill: bg-col,
       stroke: none,
     )

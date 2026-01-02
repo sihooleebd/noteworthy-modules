@@ -12,7 +12,8 @@
 /// - label-anchor: Optional anchor for label positioning
 /// - fill: Optional fill color
 /// - style: Optional style overrides
-#let polygon(..points, label: none, label-anchor: none, fill: none, style: auto) = {
+/// - label-padding: Label padding value (default: 0.2)
+#let polygon(..points, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
   let pts = points
     .pos()
     .map(p => {
@@ -26,12 +27,13 @@
     label-anchor: label-anchor,
     fill: fill,
     style: style,
+    label-padding: label-padding,
   )
 }
 
 /// Create a triangle from three points
-#let triangle(p1, p2, p3, label: none, label-anchor: none, fill: none, style: auto) = {
-  polygon(p1, p2, p3, label: label, label-anchor: label-anchor, fill: fill, style: style)
+#let triangle(p1, p2, p3, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
+  polygon(p1, p2, p3, label: label, label-anchor: label-anchor, fill: fill, style: style, label-padding: label-padding)
 }
 
 /// Create a rectangle from corner and dimensions
@@ -43,14 +45,15 @@
 /// - label: Optional label
 /// - label-anchor: Optional anchor for label positioning
 /// - fill: Optional fill color
-#let rectangle(corner, width, height, label: none, label-anchor: none, fill: none, style: auto) = {
+/// - label-padding: Label padding value (default: 0.2)
+#let rectangle(corner, width, height, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
   let c = if is-point(corner) { corner } else { point(corner.at(0), corner.at(1)) }
   let p1 = c
   let p2 = point(c.x + width, c.y)
   let p3 = point(c.x + width, c.y + height)
   let p4 = point(c.x, c.y + height)
 
-  polygon(p1, p2, p3, p4, label: label, label-anchor: label-anchor, fill: fill, style: style)
+  polygon(p1, p2, p3, p4, label: label, label-anchor: label-anchor, fill: fill, style: style, label-padding: label-padding)
 }
 
 /// Create a regular polygon from center and first vertex
@@ -62,7 +65,8 @@
 /// - label: Optional label
 /// - label-anchor: Optional anchor for label positioning
 /// - fill: Optional fill color
-#let regular-polygon(center, first-vertex, n, label: none, label-anchor: none, fill: none, style: auto) = {
+/// - label-padding: Label padding value (default: 0.2)
+#let regular-polygon(center, first-vertex, n, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
   let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
   let fv = if is-point(first-vertex) { first-vertex } else { point(first-vertex.at(0), first-vertex.at(1)) }
 
@@ -87,11 +91,12 @@
     label-anchor: label-anchor,
     fill: fill,
     style: style,
+    label-padding: label-padding,
   )
 }
 
 /// Create a square
-#let square(center, side, label: none, label-anchor: none, fill: none, style: auto) = {
+#let square(center, side, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
   let half = side / 2
   let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
   polygon(
@@ -103,6 +108,7 @@
     label-anchor: label-anchor,
     fill: fill,
     style: style,
+    label-padding: label-padding,
   )
 }
 
