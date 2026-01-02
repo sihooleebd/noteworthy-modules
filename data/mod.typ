@@ -18,22 +18,22 @@
 // THEMED TABLE WRAPPERS
 // =====================================================
 
-#let table-plot(headers: (), data: (), ..args) = {
-  let obj = table-data(headers, data, style: args.named())
+#let table-plot(headers: (), data: (), horizontal: false, ..args) = {
+  let obj = table-data(headers, data, horizontal: horizontal, style: args.named())
   render-table(obj, active-theme)
 }
 
-#let compact-table(headers: (), data: (), ..args) = {
-  let obj = table-data(headers, data, style: args.named())
+#let compact-table(headers: (), data: (), horizontal: false, ..args) = {
+  let obj = table-data(headers, data, horizontal: horizontal, style: args.named())
   render-table(obj, active-theme)
 }
 
-#let value-table(variable: $x$, func: $f(x)$, values: (), results: (), ..args) = {
-  let obj = value-table-data(variable, func, values, results, style: args.named())
+#let value-table(variable: $x$, func: $f(x)$, values: (), results: (), horizontal: false, ..args) = {
+  let obj = value-table-data(variable, func, values, results, horizontal: horizontal, style: args.named())
   render-table(obj, active-theme)
 }
 
-#let grid-table(data: (), show-indices: false, ..args) = {
-  let obj = grid-data(data, show-indices: show-indices, style: args.named())
+#let grid-table(data: (), show-indices: false, horizontal: false, ..args) = {
+  let obj = grid-data(data, show-indices: show-indices, horizontal: horizontal, style: args.named())
   render-grid(obj, active-theme)
 }
