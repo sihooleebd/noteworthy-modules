@@ -375,6 +375,104 @@
   func(f, domain: domain, func-type: "parametric", samples: samples, label: label, style: style)
 }
 
+/// Create a function using Lagrangian interpolation
+/// Constructs a polynomial that passes through all given points
+///
+/// Parameters:
+/// - ..points: Variable number of arrays of length 2, each representing (x, y) coordinates
+/// - domain: Input domain as (min, max) - defaults to min/max x of points with 20% padding
+/// - samples: Number of samples for uniform sampling
+/// - adaptive: If true, use adaptive sampling for singularity handling
+/// - label: Optional label for legend
+/// - style: Optional style overrides (stroke color, thickness)
+///
+/// Example:
+/// ```typ
+/// #lagrangian-interpolation((0, 1), (1, 2), (2, 5))
+/// ```
+#let lagrangian-interpolation(
+  ..points,
+  domain: auto,
+  samples: 200,
+  adaptive: true,
+  label: none,
+  style: auto,
+) = {
+  // Extract point arrays
+  let pts = points.pos()
+  
+  // Validate: need at least 2 points
+  if pts.len() < 2 {
+    panic("lagrangian-interpolation requires at least 2 points")
+  }
+  
+  // Validate: each point must be array of length 2
+  for (i, pt) in pts.enumerate() {
+    if type(pt) != array or pt.len() != 2 {
+      panic("Point " + str(i) + " must be an array of length 2: (x, y)")
+    }
+  }
+  
+  // Extract x and y coordinates
+  let xs = pts.map(p => p.at(0))
+  let ys = pts.map(p => p.at(1))
+  
+  // Check for duplicate x values (would make interpolation undefined)
+  for i in range(xs.len()) {
+    for j in range(i + 1, xs.len()) {
+      if calc.abs(xs.at(i) - xs.at(j)) < 1e-10 {
+        panic("Duplicate x values found: x = " + str(xs.at(i)))
+      }
+    }
+  }
+  
+  // Determine domain if auto
+  let (x-min, x-max) = if domain == auto {
+    let min-x = calc.min(..xs)
+    let max-x = calc.max(..xs)
+    let padding = (max-x - min-x) * 0.2
+    (min-x - padding, max-x + padding)
+  } else {
+    domain
+  }
+  
+  // Build Lagrangian interpolation polynomial
+  // L(x) = Σ(i=0 to n-1) y_i * Π(j≠i) (x - x_j) / (x_i - x_j)
+  let lagrangian-poly = x => {
+    let result = 0.0
+    let n = pts.len()
+    
+    for i in range(n) {
+      let x_i = xs.at(i)
+      let y_i = ys.at(i)
+      
+      // Compute the basis polynomial for point i
+      let basis = 1.0
+      for j in range(n) {
+        if i != j {
+          let x_j = xs.at(j)
+          basis = basis * (x - x_j) / (x_i - x_j)
+        }
+      }
+      
+      result = result + y_i * basis
+    }
+    
+    result
+  }
+  
+  // Create function object
+  func(
+    lagrangian-poly,
+    domain: (x-min, x-max),
+    func-type: "standard",
+    samples: samples,
+    adaptive: adaptive,
+    label: label,
+    style: style,
+  )
+}
+
 /// Check if object is a function
 #let is-func(obj) = {
   type(obj) == dictionary and obj.at("type", default: none) == "func"

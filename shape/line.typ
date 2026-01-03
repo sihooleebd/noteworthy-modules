@@ -124,3 +124,55 @@
   let dy = seg.p2.y - seg.p1.y
   calc.sqrt(dx * dx + dy * dy)
 }
+
+// =====================================================
+// Conversion Utilities
+// =====================================================
+
+/// Convert a ray to a segment of a given length
+#let ray-to-segment(ray, length: 2) = {
+  let o = ray.origin
+  let t = ray.through
+  let dir = (t.x - o.x, t.y - o.y)
+  let norm = calc.sqrt(dir.at(0) * dir.at(0) + dir.at(1) * dir.at(1))
+  if norm == 0 { return segment(o, o) }
+  let udx = dir.at(0) / norm
+  let udy = dir.at(1) / norm
+  let p2 = point(o.x + length * udx, o.y + length * udy)
+  segment(o, p2)
+}
+
+/// Convert a line to a segment of a given length, centered on its first point
+#let line-to-segment(line, length: 2) = {
+  let p1 = line.p1
+  let p2 = line.p2
+  let dir = (p2.x - p1.x, p2.y - p1.y)
+  let norm = calc.sqrt(dir.at(0) * dir.at(0) + dir.at(1) * dir.at(1))
+  if norm == 0 { return segment(p1, p1) }
+  let udx = dir.at(0) / norm
+  let udy = dir.at(1) / norm
+  let half-len = length / 2.0
+  let new-p1 = point(p1.x - half-len * udx, p1.y - half-len * udy)
+  let new-p2 = point(p1.x + half-len * udx, p1.y + half-len * udy)
+  segment(new-p1, new-p2)
+}
+
+/// Convert a segment to an infinite line
+#let segment-to-line(seg) = {
+  line(seg.p1, seg.p2)
+}
+
+/// Convert a segment to a ray
+#let segment-to-ray(seg) = {
+  ray(seg.p1, seg.p2)
+}
+
+/// Convert a ray to an infinite line
+#let ray-to-line(r) = {
+  line(r.origin, r.through)
+}
+
+/// Convert a line to a ray
+#let line-to-ray(l) = {
+  ray(l.p1, l.p2)
+}

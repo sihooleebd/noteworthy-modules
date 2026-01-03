@@ -307,3 +307,58 @@
 
   calc.abs(dist - circ.radius) < 0.0001
 }
+
+// =====================================================
+// Function Intersection (Newton's Method)
+// =====================================================
+
+#let intersect-function-function(f1, f2, x0: 0, max-iter: 200, tolerance: 1e-6, label: none, label-anchor: "north", label-padding: 0.2) = {
+  let h = 0.00001
+  let g(x) = f1(x) - f2(x)
+  // Use central difference to approximate the derivative of g
+  let g-prime(x) = (g(x + h) - g(x - h)) / (2 * h)
+
+  let x = float(x0)
+  for i in range(max-iter) {
+    let gx = g(x)
+    if calc.abs(gx) < tolerance {
+      return point(x, f1(x), label: label, label-anchor: label-anchor, label-padding: label-padding)
+    }
+    let gpx = g-prime(x)
+    if gpx == 0 {
+      // Avoid division by zero (occurs at local extremum).
+      return none
+    }
+    x = x - gx / gpx
+  }
+  // Did not converge within max-iter.
+  return none
+}
+
+#let intersect-function-line(f, linear, x0: 0, max-iter: 200, tolerance: 1e-6, label: none, label-anchor: "north", label-padding: 0.2) = {
+  let p1 = if linear.type == "ray" { linear.origin } else { linear.p1 }
+  let p2 = if linear.type == "ray" { linear.through } else { linear.p2 }
+
+  // Handle vertical line case
+  if calc.abs(p1.x - p2.x) < 1e-9 {
+    let x = p1.x
+    let p = point(x, f(x), label: label, label-padding: label-padding, label-anchor: label-anchor)
+    if point-on-linear(p, linear) {
+      return p
+    } else {
+      return none
+    }
+  }
+
+  let m = (p2.y - p1.y) / (p2.x - p1.x)
+  let c = p1.y - m * p1.x
+  let line-func(x) = m * x + c
+
+  let p = intersect-function-function(f, line-func, x0: x0, max-iter: max-iter, tolerance: tolerance, label: label, label-anchor: label-anchor, label-padding: label-padding)
+
+  if p != none and point-on-linear(p, linear) {
+    p
+  } else {
+    none
+  }
+}
