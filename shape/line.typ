@@ -93,6 +93,19 @@
   line(pt, dir, style: style, label-padding: label-padding)
 }
 
+/// Create a line from a point and a slope
+///
+/// Parameters:
+/// - p: Point on the line
+/// - slope: Slope of the line
+/// - style: Optional style overrides
+#let line-point-slope(p, slope, ..args) = {
+  let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
+  let pt2 = point(pt.x + 1, pt.y + slope)
+  
+  line(pt, pt2, ..args)
+}
+
 /// Check if object is a segment
 #let is-segment(obj) = {
   type(obj) == dictionary and obj.at("type", default: none) == "segment"

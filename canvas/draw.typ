@@ -1061,6 +1061,8 @@
       x-max,
       samples: obj.samples,
       tolerance: 0.1,
+      y-min: y-min,
+      y-max: y-max,
     )
 
     // Split at none markers and render segments

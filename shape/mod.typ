@@ -25,6 +25,7 @@
   segment-to-ray,
   ray-to-line,
   line-to-ray,
+  line-point-slope
 )
 #import "circle.typ": *
 #import "angle.typ": *

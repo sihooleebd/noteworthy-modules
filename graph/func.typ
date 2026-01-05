@@ -45,7 +45,7 @@
 /// Uses a refinement limit to prevent infinite subdivision in highly oscillatory regions
 /// Adaptive sampler using recursive subdivision
 /// Handles singularities, oscillations, and domain gaps seamlessly.
-#let adaptive-sample(f, x-min, x-max, samples: 200, tolerance: 0.5) = {
+#let adaptive-sample(f, x-min, x-max, y-min: auto, y-max: auto, samples: 200, tolerance: 0.5) = {
   // 1. Setup constants
   let range-width = x-max - x-min
   let min-step = range-width / 1e5 // Machine precision limit for zoom
@@ -55,7 +55,16 @@
   let safe-eval(x) = {
     if calc.abs(x) < 1e-12 { return none } // Strict zero avoidance
     let y = f(x)
-    if is-valid(y) { y } else { none }
+
+    let is_y_valid = if y != none and y == y and y != calc.inf and y != -calc.inf {
+      let y_min_val = if y-min == auto { -100 } else { y-min }
+      let y_max_val = if y-max == auto { 100 } else { y-max }
+      y >= y_min_val and y <= y_max_val
+    } else {
+      false
+    }
+
+    if is_y_valid { y } else { none }
   }
 
   // 3. Helper: Generate Dense Envelope (for oscillations)
