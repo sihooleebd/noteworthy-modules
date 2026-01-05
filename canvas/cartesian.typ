@@ -140,9 +140,12 @@
   }
   let is-handled(v) = handled-vectors.contains((v.x, v.y))
 
+  let plot-text-size = theme.at("plot", default: (:)).at("text-size", default: 8pt)
+  let plot-label-size = theme.at("plot", default: (:)).at("label-size", default: 10pt)
+
   // Force all text in this canvas to match the stroke color and default annotation size
   // This ensures the '0' origin label matches other ticks
-  set text(fill: stroke-col, size: 8pt)
+  set text(fill: stroke-col, size: plot-text-size)
 
   cetz.canvas({
     import cetz.draw: *
@@ -166,11 +169,11 @@
       x-grid: show-grid,
       y-grid: show-grid,
 
-      x-label: text(fill: stroke-col, size: 10pt, axis-label.at(0)),
-      y-label: text(fill: stroke-col, size: 10pt, axis-label.at(1)),
+      x-label: text(fill: stroke-col, size: plot-label-size, axis-label.at(0)),
+      y-label: text(fill: stroke-col, size: plot-label-size, axis-label.at(1)),
 
-      x-format: x => text(fill: stroke-col, size: 8pt, str(x)),
-      y-format: y => text(fill: stroke-col, size: 8pt, str(y)),
+      x-format: x => text(fill: stroke-col, size: plot-text-size, str(x)),
+      y-format: y => text(fill: stroke-col, size: plot-text-size, str(y)),
 
       x-min: x-domain.at(0),
       x-max: x-domain.at(1),
@@ -377,13 +380,16 @@
   let d = pi-divisor
   let gcd(a, b) = if b == 0 { a } else { gcd(b, calc.rem(a, b)) }
 
+  let plot-text-size = theme.at("plot", default: (:)).at("text-size", default: 8pt)
+  let plot-label-size = theme.at("plot", default: (:)).at("label-size", default: 10pt)
+
   let x-format = x => {
     let n = int(calc.round(x * d / calc.pi))
     let g = gcd(calc.abs(n), d)
     let num = calc.quo(n, g)
     let denom = calc.quo(d, g)
 
-    text(fill: stroke-col, size: 8pt, {
+    text(fill: stroke-col, size: plot-text-size, {
       if num == 0 { $0$ } else if denom == 1 {
         if num == 1 { $pi$ } else if num == -1 { $-pi$ } else { $#num pi$ }
       } else {
@@ -391,6 +397,9 @@
       }
     })
   }
+
+  // Force all text in this canvas to match the stroke color
+  set text(fill: stroke-col, size: plot-text-size)
 
   cetz.canvas({
     import cetz.draw: *
@@ -407,7 +416,7 @@
       y-label: text(fill: stroke-col, $y$),
 
       x-format: x-format,
-      y-format: y => text(fill: stroke-col, size: 8pt, str(y)),
+      y-format: y => text(fill: stroke-col, size: plot-text-size, str(y)),
 
       x-min: x-domain.at(0),
       x-max: x-domain.at(1),
