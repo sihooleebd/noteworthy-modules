@@ -140,12 +140,22 @@
   }
   let is-handled(v) = handled-vectors.contains((v.x, v.y))
 
+  // Force all text in this canvas to match the stroke color and default annotation size
+  // This ensures the '0' origin label matches other ticks
+  set text(fill: stroke-col, size: 8pt)
+
   cetz.canvas({
     import cetz.draw: *
+
 
     set-style(
       stroke: stroke-col,
       fill: none,
+      axes: (
+        stroke: stroke-col,
+        tick: (stroke: stroke-col),
+      ),
+      tick-label: (fill: stroke-col), // Explicitly style tick labels
     )
 
     plot.plot(
@@ -156,8 +166,8 @@
       x-grid: show-grid,
       y-grid: show-grid,
 
-      x-label: text(fill: stroke-col, axis-label.at(0)),
-      y-label: text(fill: stroke-col, axis-label.at(1)),
+      x-label: text(fill: stroke-col, size: 10pt, axis-label.at(0)),
+      y-label: text(fill: stroke-col, size: 10pt, axis-label.at(1)),
 
       x-format: x => text(fill: stroke-col, size: 8pt, str(x)),
       y-format: y => text(fill: stroke-col, size: 8pt, str(y)),
