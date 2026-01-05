@@ -1,4 +1,4 @@
-#import "../../core/setup.typ": *
+#import "../../../core/setup.typ": *
 #let project(theme: (:), number: "", title: "", author: "", affiliation: "", date: none, body) = {
   counter(heading).update(0)
 

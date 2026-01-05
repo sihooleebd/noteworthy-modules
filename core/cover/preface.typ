@@ -1,4 +1,4 @@
-#import "../../core/setup.typ": *
+#import "../../../core/setup.typ": *
 
 #let preface(
   theme: (:),
