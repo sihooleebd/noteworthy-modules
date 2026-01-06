@@ -34,6 +34,20 @@ Or individually:
 #import "../../templates/module/dsa/mod.typ": *
 ```
 
+## Standalone Usage
+
+Most modules in `mod.typ` rely on Noteworthy's global theming system (`setup.typ`). To use a module **outside** of the Noteworthy framework (e.g., in a standalone Typst file):
+
+1.  **Import Implementations Directly**: Do not import `mod.typ`. Instead, import the specific implementation file (e.g., `draw.typ`, `combi.typ`). These files are typically pure functions without external `setup.typ` dependencies.
+
+    ```typst
+    // Standalone usage (No Noteworthy theme required)
+    #import "templates/module/canvas/draw.typ": draw-geo
+    ```
+
+2.  **Mocking the Theme**: If you must use `mod.typ` (for themed wrappers like blocks), you will need to provide a mock `setup.typ` or manually pass the theme object to the underlying functions.
+
+
 ## Contributing
 
 We welcome additions to the standard library! Please read `CONTRIBUTING.md` for our module development philosophy and guidelines.
