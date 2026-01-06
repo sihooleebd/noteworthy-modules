@@ -2,7 +2,7 @@
 
 **Official Standard Library for the Noteworthy Framework.**
 
-This repository contains the core collection of Typst modules used in the Noteworthy ecosystem. These modules provide specialized functionality for mathematics, computer science, plotting, and layout.
+This repository contains the core collection of Typst modules used in the [Noteworthy Framework](https://github.com/sihooleebd/noteworthy). These modules provide specialized functionality for mathematics, computer science, plotting, and layout.
 
 ## Module List
 
