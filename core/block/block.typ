@@ -1,18 +1,36 @@
-#import "../../core/setup.typ": *
+#import "../../../core/setup.typ": *
 #let theorem-block(label, body, fill-color: white, stroke-color: black) = {
   v(box-margin)
-  block(
-    fill: fill-color,
-    inset: box-inset,
-    radius: 4pt,
-    width: 100%,
-    above: 1em,
-    below: 1em,
-  )[
-    #text(size: 13pt, font: title-font, fill: stroke-color, weight: "bold")[#label]
-    #v(5pt)
-    #body
-  ]
+  if block-design == "modern" {
+    // Modern Design (Catalogue Style): Outlined, rounded, spacious
+    block(
+      fill: fill-color,
+      stroke: 2pt + stroke-color,
+      inset: 14pt,
+      radius: 6pt,
+      width: 100%,
+      above: 1em,
+      below: 1em,
+    )[
+      #text(weight: "bold", size: 11pt, fill: stroke-color, label)
+      #v(8pt)
+      #body
+    ]
+  } else {
+    // Simple Design (Legacy): Filled, no border, Adlam font for title
+    block(
+      fill: fill-color,
+      inset: box-inset,
+      radius: 4pt,
+      width: 100%,
+      above: 1em,
+      below: 1em,
+    )[
+      #text(size: 13pt, font: title-font, fill: stroke-color, weight: "bold")[#label]
+      #v(5pt)
+      #body
+    ]
+  }
 }
 
 

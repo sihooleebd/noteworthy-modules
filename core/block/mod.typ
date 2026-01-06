@@ -3,7 +3,7 @@
 // =====================================================
 // Re-exports all block types with theme binding.
 
-#import "../../core/setup.typ": active-theme
+#import "../../../core/setup.typ": active-theme
 
 // Import raw implementations
 #import "block.typ": create-block, create-proof, create-solution
