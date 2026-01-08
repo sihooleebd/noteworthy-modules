@@ -78,7 +78,7 @@
     ]
 
     #v(2cm)
-    #if logo != none {
+    #if logo != none and logo != "" {
       // We use a box to ensure it doesn't break weirdly across pages (unlikely here but safe)
       box(image(logo, width: 3cm))
       v(0.5em) // Small gap between logo and affiliation text
