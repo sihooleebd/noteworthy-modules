@@ -157,6 +157,7 @@
       axes: (
         stroke: stroke-col,
         tick: (stroke: stroke-col),
+        grid: (stroke: (paint: grid-col)),
       ),
       tick-label: (fill: stroke-col), // Explicitly style tick labels
     )
@@ -181,6 +182,7 @@
       y-max: y-domain.at(1),
 
       legend-style: (fill: theme.at("page-fill", default: none), stroke: stroke-col),
+      
 
       {
         // Add corner points to ensure plot bounds are respected.
