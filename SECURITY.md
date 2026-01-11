@@ -11,7 +11,7 @@ If you discover a security vulnerability within a module (e.g., malicious code e
 We take security seriously. If you find a vulnerability in any of the modules provided in this standard library, please report it via:
 
 - **GitHub Issues**: Open a private advisory on the main [Noteworthy Repository](https://github.com/sihooleebd/noteworthy/security/advisories) (if available) or email the maintainers directly.
-- **Email**: `security@sihoolee.com` (or equivalent contact)
+- **Email**: `business@benjaminlee.kr` (or equivalent contact)
 
 Please do not disclose vulnerabilities publicly until a patch has been released.
 
