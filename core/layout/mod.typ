@@ -3,7 +3,7 @@
 // =====================================================
 // Re-exports all layout types with theme binding.
 
-#import "../../core/setup.typ": active-theme
+#import "../../../core/setup.typ": active-theme
 
 // Import raw implementations
 #import "outline.typ": outline as outline-impl

@@ -1,5 +1,5 @@
-#import "../../core/setup.typ": *
-#import "../../core/scanner.typ": load-content-info
+#import "../../../core/setup.typ": *
+#import "../../../core/scanner.typ": load-content-info
 
 
 #let outline(
@@ -48,8 +48,8 @@
       let ch-folder = if i < chapter-folders.len() { chapter-folders.at(i) } else { str(i) }
       let chap-id = format-chapter-id(ch-folder, hierarchy.len())
 
-      // Get page files for this chapter
-      let pg-files = page-folders.at(str(i), default: range(chapter-entry.pages.len()).map(j => str(j)))
+      // Get page files for this chapter (using folder name, not index)
+      let pg-files = page-folders.at(ch-folder, default: range(chapter-entry.pages.len()).map(j => str(j)))
       block(breakable: false)[
         #text(
           size: 16pt,
