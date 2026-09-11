@@ -1,5 +1,5 @@
 #import "../../../core/setup.typ": *
-#import "../../../core/xref.typ": nw-anchor, nw-block-number, nw-block-caption
+#import "../../../core/xref.typ": nw-anchor, nw-block-number, nw-block-caption, nw-in-block, nw-solution-number
 #let theorem-block(label, body, fill-color: white, stroke-color: black) = {
   v(box-margin)
   if block-design == "modern" {
@@ -76,7 +76,8 @@
   // The anchor has to be real content at a real position -- that position is
   // where a cross-file link will land.
   let heading = nw-anchor(label, heading)
-  theorem-block(heading, body, fill-color: config.fill, stroke-color: config.stroke)
+  theorem-block(heading, nw-in-block(body),
+                fill-color: config.fill, stroke-color: config.stroke)
 }
 
 #let create-solution(config, ..args, label: none) = {
@@ -104,23 +105,12 @@
 
   [#std.metadata("solution") <solution>]
 
-  let number-content = if number == auto {
-    context {
-      let sol-loc = here()
-      let start-locs = query(selector(<block-start>).before(sol-loc))
-
-      if start-locs.len() > 0 {
-        let start-loc = start-locs.last().location()
-        let sols = query(selector(<solution>).after(start-loc).before(sol-loc))
-        [#sols.len()]
-      } else {
-        let sols = query(selector(<solution>).before(sol-loc))
-        [#sols.len()]
-      }
-    }
-  } else {
-    number
-  }
+  // Counting `<solution>' elements since the last `<block-start>' looked like
+  // the same thing, but a block never marked where it ended: a solution
+  // written after one closed, or in the outer of two nested blocks, kept
+  // counting from the inner one.  The stack knows which block is actually
+  // open.
+  let number-content = if number == auto { nw-solution-number() } else { number }
 
   if show-solution {
     [#std.metadata((
@@ -132,7 +122,7 @@
       style: "local",
     )) <nw-mark>]
     let heading = [#text(weight: "bold", config.title) #number-content | #name]
-    theorem-block(nw-anchor(label, heading), body,
+    theorem-block(nw-anchor(label, heading), nw-in-block(body),
                   fill-color: config.fill, stroke-color: config.stroke)
   }
 }
@@ -158,7 +148,7 @@
     style: "none",
   )) <nw-mark>]
   let heading = [#text(weight: "bold", config.title) | #name]
-  theorem-block(nw-anchor(label, heading), body,
+  theorem-block(nw-anchor(label, heading), nw-in-block(body),
                 fill-color: config.fill, stroke-color: config.stroke)
 }
 
