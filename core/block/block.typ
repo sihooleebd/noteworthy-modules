@@ -75,7 +75,7 @@
   // The anchor has to be real content at a real position -- that position is
   // where a cross-file link will land.
   let heading = nw-anchor(label, heading)
-  theorem-block(heading, nw-in-block(body),
+  theorem-block(heading, nw-in-block(body, kind: kind, title: title, given: given),
                 fill-color: config.fill, stroke-color: config.stroke)
 }
 
@@ -154,7 +154,8 @@
     style: "scoped",
   )) <nw-mark>]
   let heading = [#text(weight: "bold", config.title)#if number != none [ #number]#if name != "" [ | #name]#nw-caption(label, "proof", name, given)]
-  theorem-block(nw-anchor(label, heading), nw-in-block(body),
+  theorem-block(nw-anchor(label, heading),
+                nw-in-block(body, kind: "proof", title: name, given: given),
                 fill-color: config.fill, stroke-color: config.stroke)
 }
 
