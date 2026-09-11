@@ -1,4 +1,5 @@
 #import "../../../core/setup.typ": *
+#import "../../../core/xref.typ": nw-anchor, nw-block-number, nw-block-caption
 #let theorem-block(label, body, fill-color: white, stroke-color: black) = {
   v(box-margin)
   if block-design == "modern" {
@@ -34,7 +35,7 @@
 }
 
 
-#let create-block(config, ..args) = {
+#let create-block(config, ..args, label: none) = {
   assert(
     1 <= args.pos().len() and args.pos().len() <= 2,
     message: "create-block must be called with (config, name, body) or (config, body)",
@@ -48,11 +49,24 @@
   } else if args.pos().len() == 1 {
     body = args.at(0)
   }
-  let label = [#text(smallcaps(config.title)) | #title]
-  theorem-block(label, body, fill-color: config.fill, stroke-color: config.stroke)
+  let kind = lower(config.title)
+  let number = nw-block-number(kind)
+  // What the build's first pass will read back for the label map, and what
+  // the heading shows: "Theorem 3 | Pythagoras".
+  [#std.metadata((
+    t: "block",
+    kind: kind,
+    label: if label == none { "" } else { label },
+    title: title,
+  )) <nw-mark>]
+  let heading = [#text(smallcaps(config.title))#if number != none [ #number] | #title]
+  // The anchor has to be real content at a real position -- that position is
+  // where a cross-file link will land.
+  let heading = nw-anchor(label, heading)
+  theorem-block(heading, body, fill-color: config.fill, stroke-color: config.stroke)
 }
 
-#let create-solution(config, ..args) = {
+#let create-solution(config, ..args, label: none) = {
   assert(
     1 <= args.pos().len() and args.pos().len() <= 3,
     message: "solution must be called with (config, name, number, body) or (config, name, body) or (config, body)",
@@ -96,12 +110,19 @@
   }
 
   if show-solution {
-    let label = [#text(weight: "bold", config.title) #number-content | #name]
-    theorem-block(label, body, fill-color: config.fill, stroke-color: config.stroke)
+    [#std.metadata((
+      t: "block",
+      kind: "solution",
+      label: if label == none { "" } else { label },
+      title: name,
+    )) <nw-mark>]
+    let heading = [#text(weight: "bold", config.title) #number-content | #name]
+    theorem-block(nw-anchor(label, heading), body,
+                  fill-color: config.fill, stroke-color: config.stroke)
   }
 }
 
-#let create-proof(config, ..args) = {
+#let create-proof(config, ..args, label: none) = {
   assert(
     1 <= args.pos().len() and args.pos().len() <= 2,
     message: "create-proof must be called with (config, name, body) or (config, body)",
@@ -114,8 +135,15 @@
   } else if args.pos().len() == 1 {
     body = args.at(0)
   }
-  let label = [#text(weight: "bold", config.title) | #name]
-  theorem-block(label, body, fill-color: config.fill, stroke-color: config.stroke)
+  [#std.metadata((
+    t: "block",
+    kind: "proof",
+    label: if label == none { "" } else { label },
+    title: name,
+  )) <nw-mark>]
+  let heading = [#text(weight: "bold", config.title) | #name]
+  theorem-block(nw-anchor(label, heading), body,
+                fill-color: config.fill, stroke-color: config.stroke)
 }
 
 #let analysis(..args) = {

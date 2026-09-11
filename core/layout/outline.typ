@@ -1,4 +1,5 @@
 #import "../../../core/setup.typ": *
+#import "../../../core/xref.typ": nw-ref
 #import "../../../core/scanner.typ": load-content-info
 
 
@@ -49,7 +50,8 @@
       let chap-id = format-chapter-id(ch-folder, hierarchy.len())
 
       // Get page files for this chapter (using folder name, not index)
-      let pg-files = page-folders.at(ch-folder, default: range(chapter-entry.pages.len()).map(j => str(j)))
+      // Page files are numbered from 1, so the fallback has to be too.
+    let pg-files = page-folders.at(ch-folder, default: range(chapter-entry.pages.len()).map(j => str(j + 1)))
       block(breakable: false)[
         #text(
           size: 16pt,
@@ -57,7 +59,7 @@
           font: font,
           fill: theme.text-accent,
         )[
-          #chapter-name #chap-id
+          #nw-ref("chapter-" + ch-folder)[#chapter-name #chap-id]
         ]
         #h(1fr)
         #text(
@@ -90,12 +92,13 @@
           }
 
           // Get file name from sorted list (positional mapping)
-          let pg-file = if j < pg-files.len() { pg-files.at(j) } else { str(j) }
+          let pg-file = if j < pg-files.len() { pg-files.at(j) } else { str(j + 1) }
           let full-id = ch-folder + "." + pg-file
           let page-display-id = format-page-id(full-id, chapter-entry.pages.len(), hierarchy.len())
 
+          let anchor = "page-" + ch-folder + "-" + pg-file
           (
-            text(fill: theme.text-muted, font: font, weight: "medium")[#chapter-name #page-display-id],
+            text(fill: theme.text-muted, font: font, weight: "medium")[#nw-ref(anchor)[#chapter-name #page-display-id]],
             box(width: 100%)[
               #text(font: font, fill: theme.text-main)[#page-entry.title]
               #box(width: 1fr, repeat[#text(fill: theme.text-muted.transparentize(70%))[. ]])
