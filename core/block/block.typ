@@ -1,5 +1,5 @@
 #import "../../../core/setup.typ": *
-#import "../../../core/xref.typ": nw-anchor, nw-block-number, nw-block-caption, nw-in-block, nw-solution-number
+#import "../../../core/xref.typ": nw-anchor, nw-block-number, nw-block-caption, nw-in-block, nw-solution-number, nw-caption
 #let theorem-block(label, body, fill-color: white, stroke-color: black) = {
   v(box-margin)
   if block-design == "modern" {
@@ -41,7 +41,6 @@
     1 <= pos.len() and pos.len() <= 3,
     message: "create-block must be called with (config, name, number, body), (config, name, body) or (config, body)",
   )
-  [#std.metadata("block") <block-start>]
   let title = ""
   // `auto' means "keep counting"; a number given here replaces the last part
   // of the id, the way `solution' has always allowed.  The chapter and page
@@ -72,7 +71,7 @@
     // the same number rather than invent a different one.
     style: "scoped",
   )) <nw-mark>]
-  let heading = [#text(smallcaps(config.title))#if number != none [ #number] | #title]
+  let heading = [#text(smallcaps(config.title))#if number != none [ #number]#if title != "" [ | #title]#nw-caption(label, kind, title, given)]
   // The anchor has to be real content at a real position -- that position is
   // where a cross-file link will land.
   let heading = nw-anchor(label, heading)
@@ -103,14 +102,10 @@
     number = pos.at(1)
   }
 
-  [#std.metadata("solution") <solution>]
-
-  // Counting `<solution>' elements since the last `<block-start>' looked like
-  // the same thing, but a block never marked where it ended: a solution
-  // written after one closed, or in the outer of two nested blocks, kept
-  // counting from the inner one.  The stack knows which block is actually
-  // open.
-  let number-content = if number == auto { nw-solution-number() } else { number }
+  // Counted within the block that is actually open, which the stack knows.
+  // The old reading -- `<solution>' elements since the last `<block-start>'
+  // -- had no way to tell, because nothing marked where a block ended.
+  let number-content = nw-solution-number(name: label, given: number)
 
   if show-solution {
     [#std.metadata((
@@ -121,33 +116,44 @@
       num: if number == auto { "" } else { str(number) },
       style: "local",
     )) <nw-mark>]
-    let heading = [#text(weight: "bold", config.title) #number-content | #name]
+    let heading = [#text(weight: "bold", config.title) #number-content#if name != "" [ | #name]]
     theorem-block(nw-anchor(label, heading), nw-in-block(body),
                   fill-color: config.fill, stroke-color: config.stroke)
   }
 }
 
 #let create-proof(config, ..args, label: none) = {
+  let pos = args.pos()
   assert(
-    1 <= args.pos().len() and args.pos().len() <= 2,
-    message: "create-proof must be called with (config, name, body) or (config, body)",
+    1 <= pos.len() and pos.len() <= 3,
+    message: "create-proof must be called with (config, name, number, body), (config, name, body) or (config, body)",
   )
   let name = ""
+  let given = auto
   let body = none
-  if args.pos().len() == 2 {
-    name = args.at(0)
-    body = args.at(1)
-  } else if args.pos().len() == 1 {
-    body = args.at(0)
+  if pos.len() == 3 {
+    name = pos.at(0)
+    given = pos.at(1)
+    body = pos.at(2)
+  } else if pos.len() == 2 {
+    name = pos.at(0)
+    body = pos.at(1)
+  } else {
+    body = pos.at(0)
   }
+  // Numbered like any other block.  It used to print none at all, which read
+  // as a gap beside a numbered theorem and, worse, left a labelled proof with
+  // nothing to be referenced by: an unnamed one came out as bare "Proof".
+  let number = nw-block-number("proof", given: given)
   [#std.metadata((
     t: "block",
     kind: "proof",
     label: if label == none { "" } else { label },
     title: name,
-    style: "none",
+    num: if given == auto { "" } else { str(given) },
+    style: "scoped",
   )) <nw-mark>]
-  let heading = [#text(weight: "bold", config.title) | #name]
+  let heading = [#text(weight: "bold", config.title)#if number != none [ #number]#if name != "" [ | #name]#nw-caption(label, "proof", name, given)]
   theorem-block(nw-anchor(label, heading), nw-in-block(body),
                 fill-color: config.fill, stroke-color: config.stroke)
 }
