@@ -36,28 +36,41 @@
 
 
 #let create-block(config, ..args, label: none) = {
+  let pos = args.pos()
   assert(
-    1 <= args.pos().len() and args.pos().len() <= 2,
-    message: "create-block must be called with (config, name, body) or (config, body)",
+    1 <= pos.len() and pos.len() <= 3,
+    message: "create-block must be called with (config, name, number, body), (config, name, body) or (config, body)",
   )
   [#std.metadata("block") <block-start>]
   let title = ""
+  // `auto' means "keep counting"; a number given here replaces the last part
+  // of the id, the way `solution' has always allowed.  The chapter and page
+  // in front of it still come from the numbering scope.
+  let given = auto
   let body = none
-  if args.pos().len() == 2 {
-    title = args.at(0)
-    body = args.at(1)
-  } else if args.pos().len() == 1 {
-    body = args.at(0)
+  if pos.len() == 3 {
+    title = pos.at(0)
+    given = pos.at(1)
+    body = pos.at(2)
+  } else if pos.len() == 2 {
+    title = pos.at(0)
+    body = pos.at(1)
+  } else {
+    body = pos.at(0)
   }
   let kind = lower(config.title)
-  let number = nw-block-number(kind)
+  let number = nw-block-number(kind, given: given)
   // What the build's first pass will read back for the label map, and what
-  // the heading shows: "Theorem 3 | Pythagoras".
+  // the heading shows: "Theorem 8.3.2 | Pythagoras".
   [#std.metadata((
     t: "block",
     kind: kind,
     label: if label == none { "" } else { label },
     title: title,
+    num: if given == auto { "" } else { str(given) },
+    // How this block numbers itself, so the build's first pass can reproduce
+    // the same number rather than invent a different one.
+    style: "scoped",
   )) <nw-mark>]
   let heading = [#text(smallcaps(config.title))#if number != none [ #number] | #title]
   // The anchor has to be real content at a real position -- that position is
@@ -115,6 +128,8 @@
       kind: "solution",
       label: if label == none { "" } else { label },
       title: name,
+      num: if number == auto { "" } else { str(number) },
+      style: "local",
     )) <nw-mark>]
     let heading = [#text(weight: "bold", config.title) #number-content | #name]
     theorem-block(nw-anchor(label, heading), body,
@@ -140,6 +155,7 @@
     kind: "proof",
     label: if label == none { "" } else { label },
     title: name,
+    style: "none",
   )) <nw-mark>]
   let heading = [#text(weight: "bold", config.title) | #name]
   theorem-block(nw-anchor(label, heading), body,
