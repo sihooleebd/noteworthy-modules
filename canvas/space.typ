@@ -112,6 +112,18 @@
         for sub-obj in obj {
           if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
             draw-geo(sub-obj, theme, bounds: bounds)
+          } else {
+            // Anything that is not one of our geometry dictionaries is drawn
+            // as it is.  `draw-vec-3d' and `draw-point-3d' return arrays of
+            // cetz elements, so without this they fell into this branch, each
+            // element failed the dictionary test, and the whole thing was
+            // dropped -- silently, leaving a canvas with axes and nothing in
+            // it.  That is every 3D vector and point this module can draw.
+            //
+            // Wrapped in an array because a cetz element is a function and
+            // the loop joins what each turn produces: a bare one cannot be
+            // joined with the arrays the other branches return.
+            (sub-obj,)
           }
         }
       } else {
