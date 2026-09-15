@@ -16,13 +16,11 @@
 #import "space.typ": (
   draw-point-3d as draw-point-3d-impl, draw-vec-3d as draw-vec-3d-impl, space-canvas as space-canvas-impl,
 )
-// Both used to be defined here, which made `canvas' the only module holding
-// object constructors rather than canvases and `draw-' functions.  They have
-// gone where their own kind live -- a sampled function to `graph', an
-// annotation over two points to `shape' -- and are re-exported under their
-// old names so existing pages keep working.
+// `surface-3d' used to be defined here, which made `canvas' the only module
+// holding object constructors rather than canvases and `draw-' functions.  It
+// now lives with its own kind in `graph', and is re-exported under its old
+// name so existing pages keep working.
 #import "../graph/surface.typ": surface as surface-3d
-#import "../shape/line.typ": brace-3d
 #import "blank.typ": blank-canvas as blank-canvas-impl, simple-canvas as simple-canvas-impl
 #import "vector.typ": (
   draw-vector as draw-vector-impl, draw-vector-addition as draw-vector-addition-impl,

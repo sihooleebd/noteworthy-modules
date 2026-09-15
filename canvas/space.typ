@@ -356,7 +356,7 @@
           content(at((obj.x, obj.y, zc)),
                   text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
         }
-      } else if kind in ("segment", "circle", "arc", "polygon", "text") {
+      } else if kind in ("segment", "circle", "arc", "polygon", "text", "brace") {
         // A flat shape, laid on the ground plane and put through the camera.
         // Handing these to `draw-geo' instead drew them in the canvas plane,
         // ignoring the camera: a circle came out a circle on screen rather
@@ -403,6 +403,27 @@
         } else if kind == "polygon" {
           line(..obj.points.map(pt => flat(pt.x, pt.y, zof(pt))), close: true,
                stroke: style.stroke, fill: fill-col)
+        } else if kind == "brace" {
+          // Only the ends are projected.  The brace itself is an annotation
+          // drawn over the picture, not an object in it: a dimension marker
+          // keeps its shape whatever the camera does, the way one does on a
+          // drafting sheet.
+          let col = style.stroke.at("paint", default: black)
+          let a = flat(obj.p1.x, obj.p1.y, zof(obj.p1))
+          let b = flat(obj.p2.x, obj.p2.y, zof(obj.p2))
+          cetz.decorations.brace(a, b, amplitude: obj.amplitude,
+                                 flip: obj.flip, stroke: style.stroke)
+          if obj.at("label", default: none) != none {
+            let dx = b.at(0) - a.at(0)
+            let dy = b.at(1) - a.at(1)
+            let len = calc.sqrt(dx * dx + dy * dy)
+            let (nx, ny) = if len > 0 { (-dy / len, dx / len) } else { (0, 1) }
+            let sign = if obj.flip { -1 } else { 1 }
+            let push = (obj.amplitude + obj.at("label-offset", default: 0.35)) * sign
+            content(((a.at(0) + b.at(0)) / 2 + nx * push,
+                     (a.at(1) + b.at(1)) / 2 + ny * push),
+                    text(fill: col, format-label(obj, obj.label)), anchor: "center")
+          }
         } else if kind == "text" {
           let col = if obj.color == auto {
             theme.at("plot", default: (:)).at("stroke", default: black)
@@ -410,31 +431,6 @@
           content(flat(obj.x, obj.y, zof(obj)), text(fill: col, obj.body),
                   anchor: obj.anchor, angle: obj.angle, padding: obj.padding,
                   fill: obj.fill, frame: obj.frame, stroke: none)
-        }
-      } else if kind == "brace-3d" {
-        let col = if obj.color == auto { vec-col } else { obj.color }
-        let a = at(obj.from)
-        let b = at(obj.to)
-        cetz.decorations.brace(
-          a, b,
-          amplitude: obj.amplitude,
-          flip: obj.flip,
-          stroke: (paint: col, thickness: 1pt),
-        )
-        if obj.label != none {
-          // Out along the brace's own normal, so the label sits clear of the
-          // spike rather than on top of whatever the brace is measuring.
-          let dx = b.at(0) - a.at(0)
-          let dy = b.at(1) - a.at(1)
-          let len = calc.sqrt(dx * dx + dy * dy)
-          let (nx, ny) = if len > 0 { (-dy / len, dx / len) } else { (0, 1) }
-          let sign = if obj.flip { -1 } else { 1 }
-          let push = (obj.amplitude + obj.label-offset) * sign
-          content(
-            ((a.at(0) + b.at(0)) / 2 + nx * push,
-             (a.at(1) + b.at(1)) / 2 + ny * push),
-            text(fill: col, obj.label),
-          )
         }
       } else if kind in ("vector", "vec-3d") {
         let from = obj.at("origin", default: (0, 0, 0))
@@ -486,12 +482,13 @@
         let kind = obj.at("type", default: "")
         let is3d = (not legacy-view
                     and kind in ("point", "vector", "vec-3d", "point-3d",
-                                 "surface-3d", "brace-3d",
-                                 "segment", "circle", "arc", "polygon", "text")
+                                 "surface-3d",
+                                 "segment", "circle", "arc", "polygon", "text",
+                                 "brace")
                     and (obj.at("z", default: none) != none
                          or kind in ("point", "vec-3d", "point-3d", "surface-3d",
-                                     "brace-3d", "segment", "circle", "arc",
-                                     "polygon", "text")))
+                                     "segment", "circle", "arc", "polygon",
+                                     "text", "brace")))
         if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
       } else {
         // Anything that is not one of our geometry dictionaries is drawn as
