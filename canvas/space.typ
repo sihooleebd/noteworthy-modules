@@ -204,6 +204,56 @@
           content(at((obj.x, obj.y, obj.at("z", default: 0))),
                   text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
         }
+      } else if kind == "surface-3d" {
+        let (u0, u1) = obj.u-domain
+        let (v0, v1) = obj.v-domain
+        let base-col = if obj.color == auto { vec-col } else { obj.color }
+        let lt = obj.light
+        let ltn = calc.sqrt(_dot(lt, lt))
+        let lt = if ltn > 0 { lt.map(c => c / ltn) } else { (0, 0, 1) }
+
+        // Build every facet with its centroid depth, then paint far ones
+        // first.  Without the sort the last facet drawn wins regardless of
+        // where it is, and the far side of the cone covers the near side.
+        let facets = ()
+        for i in range(obj.u-steps) {
+          for j in range(obj.v-steps) {
+            let u-a = u0 + (u1 - u0) * i / obj.u-steps
+            let u-b = u0 + (u1 - u0) * (i + 1) / obj.u-steps
+            let v-a = v0 + (v1 - v0) * j / obj.v-steps
+            let v-b = v0 + (v1 - v0) * (j + 1) / obj.v-steps
+            let corners = ((obj.f)(u-a, v-a), (obj.f)(u-b, v-a),
+                           (obj.f)(u-b, v-b), (obj.f)(u-a, v-b))
+            let c = (
+              corners.map(p => p.at(0)).sum() / 4,
+              corners.map(p => p.at(1)).sum() / 4,
+              corners.map(p => p.at(2)).sum() / 4,
+            )
+            // Facet normal, for the shading only.
+            let e1 = (corners.at(1).at(0) - corners.at(0).at(0),
+                      corners.at(1).at(1) - corners.at(0).at(1),
+                      corners.at(1).at(2) - corners.at(0).at(2))
+            let e2 = (corners.at(3).at(0) - corners.at(0).at(0),
+                      corners.at(3).at(1) - corners.at(0).at(1),
+                      corners.at(3).at(2) - corners.at(0).at(2))
+            let n = (e1.at(1) * e2.at(2) - e1.at(2) * e2.at(1),
+                     e1.at(2) * e2.at(0) - e1.at(0) * e2.at(2),
+                     e1.at(0) * e2.at(1) - e1.at(1) * e2.at(0))
+            let nn = calc.sqrt(_dot(n, n))
+            let n = if nn > 0 { n.map(c => c / nn) } else { (0, 0, 1) }
+            facets.push((depth: _dot(c, cam.fwd), corners: corners, normal: n))
+          }
+        }
+        for facet in facets.sorted(key: f => f.depth) {
+          let fill-col = if obj.shade {
+            let t = calc.max(0.15, calc.abs(_dot(facet.normal, lt)))
+            base-col.lighten(0%).darken(int((1 - t) * 60) * 1%)
+          } else {
+            base-col
+          }
+          line(..facet.corners.map(at), close: true,
+               fill: fill-col, stroke: obj.stroke)
+        }
       } else if kind in ("vector", "vec-3d") {
         let from = obj.at("origin", default: (0, 0, 0))
         let to = if kind == "vec-3d" {
@@ -230,9 +280,9 @@
         // style this module has.
         let kind = obj.at("type", default: "")
         let is3d = (not legacy-view
-                    and kind in ("point", "vector", "vec-3d", "point-3d")
+                    and kind in ("point", "vector", "vec-3d", "point-3d", "surface-3d")
                     and (obj.at("z", default: none) != none
-                         or kind in ("vec-3d", "point-3d")))
+                         or kind in ("vec-3d", "point-3d", "surface-3d")))
         if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
       } else if type(obj) == array {
         // Handle arrays of objects (e.g., from vec-add, vec-components)
@@ -261,6 +311,67 @@
 }
 
 /// Draw a 3D vector (arrow) in space
+/// A parametric surface, drawn as filled facets.
+///
+/// CeTZ has no 3D renderer -- no depth buffer, no lighting, and cast shadows
+/// are out of reach.  What it does have is filled polygons, and once the
+/// camera is ours a surface is just facets sorted back to front and painted
+/// in that order.  That is a painter's algorithm: correct for a convex shape
+/// like a cone or a sphere, and wrong only where facets genuinely interleave.
+///
+/// `shade' darkens each facet by how far its normal turns from the light,
+/// which is flat Lambert shading -- enough to read as a solid, with none of
+/// the machinery real shading would need.
+#let surface-3d(
+  f,
+  u-domain: (0, 360),
+  v-domain: (0, 1),
+  u-steps: 24,
+  v-steps: 8,
+  color: auto,
+  shade: true,
+  light: (0.4, -0.6, 0.7),
+  stroke: none,
+) = (
+  type: "surface-3d",
+  f: f,
+  u-domain: u-domain,
+  v-domain: v-domain,
+  u-steps: u-steps,
+  v-steps: v-steps,
+  color: color,
+  shade: shade,
+  light: light,
+  stroke: stroke,
+)
+
+/// A cone standing on the xy-plane.
+#let cone-3d(
+  radius: 1,
+  height: 2,
+  base: (0, 0, 0),
+  segments: 28,
+  color: auto,
+  shade: true,
+  stroke: none,
+) = surface-3d(
+  (u, v) => {
+    let r = radius * (1 - v)
+    (
+      base.at(0) + r * calc.cos(u * 1deg),
+      base.at(1) + r * calc.sin(u * 1deg),
+      base.at(2) + height * v,
+    )
+  },
+  u-domain: (0, 360),
+  v-domain: (0, 1),
+  u-steps: segments,
+  v-steps: 1,
+  color: color,
+  shade: shade,
+  stroke: stroke,
+)
+
 #let draw-vec-3d(
   theme: (:),
   start: (0, 0, 0),
