@@ -192,16 +192,17 @@
     // Tangent length from p to tangent point
     let tan-len = calc.sqrt(dist * dist - r * r)
 
-    // Angle from center-to-point to tangent point
-    let angle-to-tangent = calc.asin(r / dist)
-    let base-angle = calc.atan2(dy, dx)
+    // The radius to a tangent point is acos(r / dist) off the centre-to-point
+    // direction, one to each side.  (calc.atan2 takes x first in Typst.)
+    let half = calc.acos(r / dist)
+    let base-angle = calc.atan2(dx, dy)
 
     // Two tangent points
-    let angle1 = base-angle + angle-to-tangent
-    let angle2 = base-angle - angle-to-tangent
+    let angle1 = base-angle + half
+    let angle2 = base-angle - half
 
-    let t1 = point(c.x + r * calc.cos(angle1 + 90deg), c.y + r * calc.sin(angle1 + 90deg))
-    let t2 = point(c.x + r * calc.cos(angle2 - 90deg), c.y + r * calc.sin(angle2 - 90deg))
+    let t1 = point(c.x + r * calc.cos(angle1), c.y + r * calc.sin(angle1))
+    let t2 = point(c.x + r * calc.cos(angle2), c.y + r * calc.sin(angle2))
 
     (line(p, t1), line(p, t2))
   }

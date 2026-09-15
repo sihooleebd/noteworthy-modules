@@ -555,7 +555,7 @@
       let end = (p2.x, p2.y)
 
       // Calculate angle for label positioning
-      let angle = calc.atan2(p2.y - p1.y, p2.x - p1.x)
+      let angle = calc.atan2(p2.x - p1.x, p2.y - p1.y)
 
       // Curvature
       if e.curved != 0 {

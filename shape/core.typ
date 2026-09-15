@@ -21,7 +21,7 @@
 /// Convert Cartesian to polar
 #let cartesian-to-polar(x, y) = {
   let r = calc.sqrt(x * x + y * y)
-  let theta = calc.atan2(y, x)
+  let theta = calc.atan2(x, y)
   (r, theta)
 }
 

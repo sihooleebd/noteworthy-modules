@@ -145,8 +145,8 @@
     let dy1 = obj.p1.y - obj.vertex.y
     let dx2 = obj.p2.x - obj.vertex.x
     let dy2 = obj.p2.y - obj.vertex.y
-    let start-deg = calc.atan2(dy1, dx1).deg()
-    let end-deg = calc.atan2(dy2, dx2).deg()
+    let start-deg = calc.atan2(dx1, dy1).deg()
+    let end-deg = calc.atan2(dx2, dy2).deg()
     if start-deg < 0 { start-deg += 360 }
     if end-deg < 0 { end-deg += 360 }
     // Strict CCW difference

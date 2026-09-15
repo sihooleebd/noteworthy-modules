@@ -48,7 +48,7 @@
 
   // Calculate angles for all vectors
   let vec-with-angles = vectors.map(v => {
-    let angle = calc.atan2(v.y, v.x).deg()
+    let angle = calc.atan2(v.x, v.y).deg()
     let angle = if angle < 0 { angle + 360 } else { angle }
     (vec: v, angle: angle)
   })

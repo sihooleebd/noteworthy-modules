@@ -91,8 +91,8 @@
   let dx2 = ang.p2.x - ang.vertex.x
   let dy2 = ang.p2.y - ang.vertex.y
 
-  let angle1 = calc.atan2(dy1, dx1)
-  let angle2 = calc.atan2(dy2, dx2)
+  let angle1 = calc.atan2(dx1, dy1)
+  let angle2 = calc.atan2(dx2, dy2)
 
   let diff = angle2 - angle1
   // Normalize to [0, 2π)
@@ -103,12 +103,12 @@
 #let angle-start(ang) = {
   let dx = ang.p1.x - ang.vertex.x
   let dy = ang.p1.y - ang.vertex.y
-  calc.atan2(dy, dx)
+  calc.atan2(dx, dy)
 }
 
 /// Get the end angle (from positive x-axis)
 #let angle-end(ang) = {
   let dx = ang.p2.x - ang.vertex.x
   let dy = ang.p2.y - ang.vertex.y
-  calc.atan2(dy, dx)
+  calc.atan2(dx, dy)
 }
