@@ -189,3 +189,38 @@
 #let line-to-ray(l) = {
   ray(l.p1, l.p2)
 }
+
+/// A curly brace spanning two points, for measuring something
+///
+/// The brace is an annotation drawn over the picture rather than an object
+/// in it: `amplitude' is how far its spike stands off the span, and `flip'
+/// puts it on the other side.  The label sits clear of the spike.
+///
+/// Parameters:
+/// - from: One end of the span
+/// - to: The other end
+/// - label: Optional label (e.g. $ell$)
+/// - amplitude: Height of the brace (default: 0.4)
+/// - flip: Draw it on the other side (default: false)
+/// - label-offset: Further out from the spike the label sits (default: 0.35)
+/// - style: Optional style overrides
+#let brace(from, to, label: none, amplitude: 0.4, flip: false, label-offset: 0.35, style: auto) = {
+  let p1 = if is-point(from) { from } else { point(from.at(0), from.at(1)) }
+  let p2 = if is-point(to) { to } else { point(to.at(0), to.at(1)) }
+
+  (
+    type: "brace",
+    p1: p1,
+    p2: p2,
+    label: label,
+    amplitude: amplitude,
+    flip: flip,
+    "label-offset": label-offset,
+    style: style,
+  )
+}
+
+/// Check if object is a brace
+#let is-brace(obj) = {
+  type(obj) == dictionary and obj.at("type", default: none) == "brace"
+}
