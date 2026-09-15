@@ -115,3 +115,49 @@
   let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
   pt.z
 }
+
+/// Put a body at a coordinate -- a point that shows text instead of a dot
+///
+/// `cartesian-canvas' draws the objects it is given and ignores bare
+/// content, so this is how a note, a formula or a stray letter gets into a
+/// plot.
+///
+/// Parameters:
+/// - pos: Where to put it, a point object or (x, y) tuple
+/// - body: Any content ([text], $math$, an image)
+/// - anchor: Which part of the body sits at pos (default: "center")
+/// - color: Text colour (default: the theme's)
+/// - angle: Rotate the body (default: 0deg)
+/// - padding: Space around it, in plot units (default: 0)
+/// - fill: Background behind it (default: none)
+/// - frame: "rect", "circle" or none (default: none)
+#let text-at(
+  pos,
+  body,
+  anchor: "center",
+  color: auto,
+  angle: 0deg,
+  padding: 0,
+  fill: none,
+  frame: none,
+) = {
+  let p = if is-point(pos) { pos } else { point(pos.at(0), pos.at(1)) }
+
+  (
+    type: "text",
+    x: p.x,
+    y: p.y,
+    body: body,
+    anchor: anchor,
+    color: color,
+    angle: angle,
+    padding: padding,
+    fill: fill,
+    frame: frame,
+  )
+}
+
+/// Check if object is a text annotation
+#let is-text-at(obj) = {
+  type(obj) == dictionary and obj.at("type", default: none) == "text"
+}

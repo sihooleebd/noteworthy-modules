@@ -656,6 +656,25 @@
   }
 }
 
+/// Draw a body at a coordinate
+#let draw-text-at(obj, theme) = {
+  import cetz.draw: *
+  let col = if obj.color == auto {
+    theme.at("plot", default: (:)).at("stroke", default: black)
+  } else { obj.color }
+
+  content(
+    (obj.x, obj.y),
+    text(fill: col, obj.body),
+    anchor: obj.anchor,
+    angle: obj.angle,
+    padding: obj.padding,
+    fill: obj.fill,
+    frame: obj.frame,
+    stroke: none,
+  )
+}
+
 /// Draw a curly brace spanning two points
 #let draw-brace(obj, theme) = {
   import cetz.draw: *
@@ -1487,6 +1506,8 @@
     draw-curve-obj(obj, theme)
   } else if t == "brace" {
     draw-brace(obj, theme)
+  } else if t == "text" {
+    draw-text-at(obj, theme)
   }
   // Note: func and data-series objects are handled separately in plot context
 }
