@@ -81,6 +81,8 @@
 /// - show-axes: Whether to show axes (default: true)
 /// - show-grid: Whether to show XY grid (default: true)
 /// - show-ticks: Whether to show tick marks (default: false)
+/// - length: Size of one scene unit (default: 1cm).  The canvas sizes itself
+///   from its contents, so this is the scale knob rather than a width.
 /// - ..objects: Geometry objects to render
 #let space-canvas(
   theme: (:),
@@ -99,8 +101,18 @@
   show-axes: true,
   show-grid: true,
   show-ticks: false,
+  length: 1cm,
   ..objects,
 ) = {
+  // Named arguments fall into `..objects', where only `.pos()' is ever read --
+  // so a misspelled one, or one that never existed, did nothing at all and
+  // said nothing.  This module's own documentation passed `width: 10cm' for
+  // exactly that reason.  Refuse instead.
+  if objects.named().len() > 0 {
+    panic("space-canvas: unknown argument(s): "
+          + objects.named().keys().join(", ")
+          + ". Size is set with `length' (the size of one scene unit).")
+  }
   let axis-col = theme.at("plot", default: (:)).at("stroke", default: black)
   let grid-col = theme.at("plot", default: (:)).at("grid", default: gray)
 
@@ -124,7 +136,7 @@
   // whatever cetz's affine stack could manage.
   let at = p => if legacy-view { p } else { _project(p, cam, proj, distance) }
 
-  cetz.canvas({
+  cetz.canvas(length: length, {
     import cetz.draw: *
 
     if legacy-view {
