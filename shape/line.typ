@@ -193,18 +193,29 @@
 /// A curly brace spanning two points, for measuring something
 ///
 /// The brace is an annotation drawn over the picture rather than an object
-/// in it: `amplitude' is how far its spike stands off the span, and `flip'
-/// puts it on the other side.  The label sits clear of the spike.
+/// in it: `amplitude' is how far its spike stands off the span, and `angle'
+/// says which way it leans out.  The label sits clear of the spike.
+///
+/// `angle' is a direction on the page -- 0deg right, 90deg up -- and the
+/// brace goes to whichever of its two sides points that way.  A brace has
+/// only those two sides, its span being fixed, so the angle chooses between
+/// them rather than setting a bearing.  That is worth saying in a direction
+/// rather than as a flag, because through a camera you cannot tell in
+/// advance which side a flag lands on: `angle: 90deg' is above it on the
+/// page whatever the projection does, while `flip' had to be discovered by
+/// rendering.  Left unset, the brace sits to the left of `from' -> `to'.
 ///
 /// Parameters:
 /// - from: One end of the span
 /// - to: The other end
 /// - label: Optional label (e.g. $ell$)
 /// - amplitude: Height of the brace (default: 0.4)
-/// - flip: Draw it on the other side (default: false)
+/// - angle: Which way it leans out, as a direction on the page (default: auto)
+/// - flip: The older spelling of the same choice, still accepted
 /// - label-offset: Further out from the spike the label sits (default: 0.35)
 /// - style: Optional style overrides
-#let brace(from, to, label: none, amplitude: 0.4, flip: false, label-offset: 0.35, style: auto) = {
+#let brace(from, to, label: none, amplitude: 0.4, angle: auto, flip: none,
+           label-offset: 0.35, style: auto) = {
   let p1 = as-point(from)
   let p2 = as-point(to)
 
@@ -214,6 +225,7 @@
     p2: p2,
     label: label,
     amplitude: amplitude,
+    angle: angle,
     flip: flip,
     "label-offset": label-offset,
     style: style,

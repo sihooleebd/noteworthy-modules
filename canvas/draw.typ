@@ -691,37 +691,60 @@
   )
 }
 
+// Which of the two sides the brace goes to.  `angle' names a direction on
+// the page and the side pointing that way wins; the side is measured after
+// projection, so the answer holds whatever the camera is doing.
+#let brace-flip(obj, ax, ay, bx, by) = {
+  let want = obj.at("angle", default: auto)
+  if want == auto {
+    // `flip' said the same thing before `angle' did, and pages written
+    // against it should not have to be rewritten to keep drawing.
+    let old = obj.at("flip", default: none)
+    return if old == none { false } else { old }
+  }
+  let dx = bx - ax
+  let dy = by - ay
+  let len = calc.sqrt(dx * dx + dy * dy)
+  if len == 0 { return false }
+  // cetz puts the spike to the left of from -> to; take the other side when
+  // the wanted direction points away from it.
+  let nx = -dy / len
+  let ny = dx / len
+  nx * calc.cos(want) + ny * calc.sin(want) < 0
+}
+
 /// Draw a curly brace spanning two points
 #let draw-brace(obj, theme) = {
-  import cetz.draw: *
-  let style = get-line-style(obj, theme)
-  let col = style.stroke.at("paint", default: black)
+import cetz.draw: *
+let style = get-line-style(obj, theme)
+let col = style.stroke.at("paint", default: black)
 
-  let a = (obj.p1.x, obj.p1.y)
-  let b = (obj.p2.x, obj.p2.y)
+let a = (obj.p1.x, obj.p1.y)
+let b = (obj.p2.x, obj.p2.y)
+let flip = brace-flip(obj, a.at(0), a.at(1), b.at(0), b.at(1))
 
-  cetz.decorations.brace(
-    a, b,
-    amplitude: obj.amplitude,
-    flip: obj.flip,
-    stroke: style.stroke,
+cetz.decorations.brace(
+  a, b,
+  amplitude: obj.amplitude,
+  flip: flip,
+  stroke: style.stroke,
+)
+
+if obj.at("label", default: none) != none {
+  // Out along the brace's own normal, so the label sits clear of the spike
+  // rather than on top of whatever the brace is measuring.
+  let dx = b.at(0) - a.at(0)
+  let dy = b.at(1) - a.at(1)
+  let len = calc.sqrt(dx * dx + dy * dy)
+  let (nx, ny) = if len > 0 { (-dy / len, dx / len) } else { (0, 1) }
+  let sign = if flip { -1 } else { 1 }
+  let push = (obj.amplitude + obj.at("label-offset", default: 0.35)) * sign
+  content(
+    ((a.at(0) + b.at(0)) / 2 + nx * push, (a.at(1) + b.at(1)) / 2 + ny * push),
+    text(fill: col, format-label(obj, obj.label)),
+    anchor: "center",
   )
-
-  if obj.at("label", default: none) != none {
-    // Out along the brace's own normal, so the label sits clear of the spike
-    // rather than on top of whatever the brace is measuring.
-    let dx = b.at(0) - a.at(0)
-    let dy = b.at(1) - a.at(1)
-    let len = calc.sqrt(dx * dx + dy * dy)
-    let (nx, ny) = if len > 0 { (-dy / len, dx / len) } else { (0, 1) }
-    let sign = if obj.flip { -1 } else { 1 }
-    let push = (obj.amplitude + obj.at("label-offset", default: 0.35)) * sign
-    content(
-      ((a.at(0) + b.at(0)) / 2 + nx * push, (a.at(1) + b.at(1)) / 2 + ny * push),
-      text(fill: col, format-label(obj, obj.label)),
-      anchor: "center",
-    )
-  }
+}
 }
 
 /// Draw an angle marker (Always 2D for now, 3D angle markers are hard)

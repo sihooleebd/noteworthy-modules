@@ -3,7 +3,7 @@
 // =====================================================
 
 #import "@preview/cetz:0.4.2"
-#import "draw.typ": draw-geo, get-line-style, format-label
+#import "draw.typ": draw-geo, get-line-style, format-label, brace-flip
 
 // =====================================================
 // Camera
@@ -411,14 +411,15 @@
           let col = style.stroke.at("paint", default: black)
           let a = flat(obj.p1.x, obj.p1.y, zof(obj.p1))
           let b = flat(obj.p2.x, obj.p2.y, zof(obj.p2))
+          let flip = brace-flip(obj, a.at(0), a.at(1), b.at(0), b.at(1))
           cetz.decorations.brace(a, b, amplitude: obj.amplitude,
-                                 flip: obj.flip, stroke: style.stroke)
+                                 flip: flip, stroke: style.stroke)
           if obj.at("label", default: none) != none {
             let dx = b.at(0) - a.at(0)
             let dy = b.at(1) - a.at(1)
             let len = calc.sqrt(dx * dx + dy * dy)
             let (nx, ny) = if len > 0 { (-dy / len, dx / len) } else { (0, 1) }
-            let sign = if obj.flip { -1 } else { 1 }
+            let sign = if flip { -1 } else { 1 }
             let push = (obj.amplitude + obj.at("label-offset", default: 0.35)) * sign
             content(((a.at(0) + b.at(0)) / 2 + nx * push,
                      (a.at(1) + b.at(1)) / 2 + ny * push),
