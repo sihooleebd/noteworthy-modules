@@ -345,33 +345,6 @@
   stroke: stroke,
 )
 
-/// A cone standing on the xy-plane.
-#let cone-3d(
-  radius: 1,
-  height: 2,
-  base: (0, 0, 0),
-  segments: 28,
-  color: auto,
-  shade: true,
-  stroke: none,
-) = surface-3d(
-  (u, v) => {
-    let r = radius * (1 - v)
-    (
-      base.at(0) + r * calc.cos(u * 1deg),
-      base.at(1) + r * calc.sin(u * 1deg),
-      base.at(2) + height * v,
-    )
-  },
-  u-domain: (0, 360),
-  v-domain: (0, 1),
-  u-steps: segments,
-  v-steps: 1,
-  color: color,
-  shade: shade,
-  stroke: stroke,
-)
-
 #let draw-vec-3d(
   theme: (:),
   start: (0, 0, 0),
