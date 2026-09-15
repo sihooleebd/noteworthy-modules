@@ -612,10 +612,6 @@
 #let draw-arc(obj, theme) = {
   import cetz.draw: *
   let style = get-line-style(obj, theme)
-  // A sector is the same arc closed back to its centre, which is what cetz
-  // calls "PIE" -- the only shape of the three that can be filled.
-  let sector = obj.type == "sector"
-
   if obj.center.at("z", default: none) == none {
     arc(
       (obj.center.x, obj.center.y),
@@ -623,16 +619,14 @@
       stop: obj.end,
       radius: obj.radius,
       stroke: style.stroke,
-      fill: if sector { obj.at("fill", default: none) } else { none },
-      mode: if sector { "PIE" } else { "OPEN" },
+      mode: "OPEN",
       anchor: "origin", // Anchor at center, not arc start
     )
-    // Arcs and sectors carry a label and never drew one.  Put it on the
-    // bisector: inside the wedge for a sector, just beyond the curve for a
-    // bare arc, which is where each is legible.
+    // `arc' has accepted a label since it was written and never drew one.
+    // Just beyond the curve, on the bisector, which is where it is legible.
     if obj.at("label", default: none) != none {
       let mid = (obj.start + obj.end) / 2
-      let r = obj.radius * (if sector { 0.6 } else { 1.18 })
+      let r = obj.radius * 1.18
       content(
         (obj.center.x + r * calc.cos(mid), obj.center.y + r * calc.sin(mid)),
         text(fill: style.stroke.at("paint", default: black), obj.label),
@@ -1446,7 +1440,7 @@
     draw-line-infinite(obj, theme, bounds)
   } else if t == "ray" { draw-ray(obj, theme, bounds) } else if t == "circle" { draw-circle-obj(obj, theme) } else if (
     t == "arc"
-  ) { draw-arc(obj, theme) } else if t == "sector" { draw-arc(obj, theme) } else if t == "angle" { draw-angle-marker(obj, theme) } else if t == "right-angle" {
+  ) { draw-arc(obj, theme) } else if t == "angle" { draw-angle-marker(obj, theme) } else if t == "right-angle" {
     draw-right-angle-marker(obj, theme)
   } else if t == "polygon" { draw-polygon-obj(obj, theme) } else if t == "vector" {
     draw-vector-obj(obj, theme, origin: origin)
