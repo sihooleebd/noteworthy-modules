@@ -656,6 +656,22 @@
   }
 }
 
+/// Draw a bare cetz element inside a plot, in data coordinates
+///
+/// A canvas takes our geometry dictionaries, but nothing stopped anyone from
+/// handing it a cetz element straight -- and every plot-based canvas dropped
+/// those without a word.  They are functions rather than dictionaries, and a
+/// plot has to be told to place them in data coordinates, hence `annotate'.
+#let draw-raw(obj) = {
+  if type(obj) == type([]) {
+    panic(
+      "canvas: bare content has nowhere to go -- wrap it in "
+        + "shape.text-at((x, y), [..]) to say where it belongs",
+    )
+  }
+  plot.annotate({ if type(obj) == array { obj } else { (obj,) } })
+}
+
 /// Draw a body at a coordinate
 #let draw-text-at(obj, theme) = {
   import cetz.draw: *

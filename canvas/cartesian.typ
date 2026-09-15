@@ -4,7 +4,7 @@
 
 #import "@preview/cetz:0.4.2"
 #import "@preview/cetz-plot:0.1.3": plot
-#import "draw.typ": draw-data-series-obj, draw-func-obj, draw-geo, format-label
+#import "draw.typ": draw-data-series-obj, draw-func-obj, draw-geo, format-label, draw-raw
 
 /// Create a Cartesian (rectangular) coordinate canvas
 /// Renders geometry objects with x-y axes.
@@ -269,8 +269,12 @@
                     draw-geo(sub-obj, theme, bounds: bounds, aspect: aspect)
                   })
                 }
+              } else if sub-obj != none {
+                draw-raw(sub-obj)
               }
             }
+          } else if obj != none {
+            draw-raw(obj)
           }
         }
       },
@@ -448,6 +452,16 @@
             ) {
               plot.annotate({ draw-geo(obj, theme, bounds: bounds) })
             }
+          } else if type(obj) == array {
+            for sub-obj in obj {
+              if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
+                plot.annotate({ draw-geo(sub-obj, theme, bounds: bounds) })
+              } else if sub-obj != none {
+                draw-raw(sub-obj)
+              }
+            }
+          } else if obj != none {
+            draw-raw(obj)
           }
         }
       },
