@@ -81,8 +81,13 @@
 /// - show-axes: Whether to show axes (default: true)
 /// - show-grid: Whether to show XY grid (default: true)
 /// - show-ticks: Whether to show tick marks (default: false)
-/// - length: Size of one scene unit (default: 1cm).  The canvas sizes itself
-///   from its contents, so this is the scale knob rather than a width.
+/// - size: Drawing extent as (x, y) or (x, y, z) in canvas units, the way
+///   `cartesian-canvas' takes it: each domain is mapped onto that many units,
+///   so the picture's size stops depending on what the domains happen to be.
+///   A two-entry size scales z with x, which keeps the vertical honest.
+///   Default `none' -- one scene unit is one canvas unit.
+/// - length: Size of one canvas unit (default: 1cm), for scaling the whole
+///   drawing without changing its proportions.
 /// - ..objects: Geometry objects to render
 #let space-canvas(
   theme: (:),
@@ -101,6 +106,7 @@
   show-axes: true,
   show-grid: true,
   show-ticks: false,
+  size: none,
   length: 1cm,
   ..objects,
 ) = {
@@ -134,7 +140,27 @@
   // Every coordinate in here goes through this, and comes out as page
   // coordinates -- so what is drawn is what the camera sees, rather than
   // whatever cetz's affine stack could manage.
-  let at = p => if legacy-view { p } else { _project(p, cam, proj, distance) }
+  // Map each domain onto the requested extent before projecting, so the
+  // drawing is the size asked for rather than the size the numbers happen to
+  // imply.  Done here, in front of the camera, so perspective depth is
+  // measured in the same units as everything else.
+  let span(d) = {
+    let w = d.at(1) - d.at(0)
+    if w == 0 { 1 } else { w }
+  }
+  let sx = if size == none { 1 } else { size.at(0) / span(x-domain) }
+  let sy = if size == none { 1 } else { size.at(1) / span(y-domain) }
+  let sz = if size == none { 1 } else if size.len() > 2 {
+    size.at(2) / span(z-domain)
+  } else { sx }
+  let scaled = p => (
+    p.at(0, default: 0) * sx,
+    p.at(1, default: 0) * sy,
+    p.at(2, default: 0) * sz,
+  )
+  let at = p => if legacy-view { p } else {
+    _project(scaled(p), cam, proj, distance)
+  }
 
   cetz.canvas(length: length, {
     import cetz.draw: *
