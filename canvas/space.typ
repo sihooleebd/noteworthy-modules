@@ -5,6 +5,64 @@
 #import "@preview/cetz:0.4.2"
 #import "draw.typ": draw-geo
 
+// =====================================================
+// Camera
+// =====================================================
+//
+// The scene used to be turned with cetz's `rotate(x:, y:, z:)', which is
+// three Euler angles about the fixed world axes composed as Rz.Ry.Rx -- so
+// the knobs interact and none of them is "where the camera is".  Worse, cetz
+// can only ever draw this flat: `mul4x4-vec3' discards the matrix's fourth
+// row and there is no homogeneous divide anywhere in its pipeline, so a
+// perspective term would be computed and then dropped.
+//
+// So the projection happens here instead.  `azimuth' turns the camera around
+// the z-axis, `elevation' lifts it above the xy-plane, and both mean exactly
+// that on their own.
+
+#let _dot(a, b) = a.at(0) * b.at(0) + a.at(1) * b.at(1) + a.at(2) * b.at(2)
+
+#let _camera(azimuth, elevation) = (
+  right: (-calc.sin(azimuth), calc.cos(azimuth), 0.0),
+  up: (
+    -calc.sin(elevation) * calc.cos(azimuth),
+    -calc.sin(elevation) * calc.sin(azimuth),
+    calc.cos(elevation),
+  ),
+  // Towards the camera, so a larger dot product means nearer the eye.
+  fwd: (
+    calc.cos(elevation) * calc.cos(azimuth),
+    calc.cos(elevation) * calc.sin(azimuth),
+    calc.sin(elevation),
+  ),
+)
+
+/// A 3D point as page coordinates.
+///
+/// Under `perspective' the scale is 1 at the origin and grows towards the
+/// camera, so `distance' reads as "how far away the eye is, in scene units":
+/// large is nearly flat, small exaggerates.
+#let _project(p, cam, projection, distance) = {
+  let v = if type(p) == array {
+    (p.at(0, default: 0), p.at(1, default: 0), p.at(2, default: 0))
+  } else if type(p) == dictionary {
+    (p.at("x", default: 0), p.at("y", default: 0), p.at("z", default: 0))
+  } else {
+    (0, 0, 0)
+  }
+  let x = _dot(v, cam.right)
+  let y = _dot(v, cam.up)
+  if projection == "perspective" {
+    let depth = distance - _dot(v, cam.fwd)
+    // Behind the eye there is no honest answer; clamp rather than mirror the
+    // point through the origin, which is what a bare divide would do.
+    let scale = if depth > 0.01 { distance / depth } else { distance / 0.01 }
+    (x * scale, y * scale)
+  } else {
+    (x, y)
+  }
+}
+
 /// Create a 3D space canvas
 /// Renders 3D geometry objects with perspective projection.
 ///
@@ -13,7 +71,11 @@
 /// - x-domain: X-axis range (default: (0, 5))
 /// - y-domain: Y-axis range (default: (0, 5))
 /// - z-domain: Z-axis range (default: (0, 4))
-/// - view: Camera rotation as (x:, y:, z:) dictionary
+/// - azimuth: Camera angle around the z-axis (default: 30deg)
+/// - elevation: Camera height above the xy-plane (default: 30deg)
+/// - projection: "orthographic" or "perspective" (default: "orthographic")
+/// - distance: Eye distance in scene units, perspective only (default: 12)
+/// - view: Deprecated raw Euler angles (x:, y:, z:); see the camera note
 /// - step: Grid line spacing (default: 1)
 /// - x-label, y-label, z-label: Axis labels
 /// - show-axes: Whether to show axes (default: true)
@@ -25,7 +87,11 @@
   x-domain: (0, 5),
   y-domain: (0, 5),
   z-domain: (0, 4),
-  view: (x: -90deg, y: -120deg, z: 0deg),
+  azimuth: 30deg,
+  elevation: 30deg,
+  projection: "orthographic",
+  distance: 12,
+  view: none,
   step: 1,
   x-label: $x$,
   y-label: $y$,
@@ -42,11 +108,28 @@
   let grid-style = (paint: grid-col, thickness: 0.5pt)
   let tick-style = (paint: axis-col, thickness: 1pt)
 
+  // `view' predates the camera and is three Euler angles about the world
+  // axes.  Honoured when given, so old documents keep their framing, but it
+  // cannot be projected -- cetz throws the perspective term away -- so it
+  // stays flat and is worth moving off.
+  let legacy-view = view != none
+  let cam = _camera(azimuth, elevation)
+  let proj = if projection == "perspective" and not legacy-view {
+    "perspective"
+  } else {
+    "orthographic"
+  }
+  // Every coordinate in here goes through this, and comes out as page
+  // coordinates -- so what is drawn is what the camera sees, rather than
+  // whatever cetz's affine stack could manage.
+  let at = p => if legacy-view { p } else { _project(p, cam, proj, distance) }
+
   cetz.canvas({
     import cetz.draw: *
 
-    // Apply 3D rotation
-    rotate(x: view.at("x", default: 0deg), y: view.at("y", default: 0deg), z: view.at("z", default: 0deg))
+    if legacy-view {
+      rotate(x: view.at("x", default: 0deg), y: view.at("y", default: 0deg), z: view.at("z", default: 0deg))
+    }
 
     let (x-min, x-max) = x-domain
     let (y-min, y-max) = y-domain
@@ -56,27 +139,27 @@
     if show-grid {
       for i in range(int(x-min / step), int(x-max / step) + 1) {
         let x = i * step
-        line((x, y-min, 0), (x, y-max, 0), stroke: grid-style)
+        line(at((x, y-min, 0)), at((x, y-max, 0)), stroke: grid-style)
       }
       for i in range(int(y-min / step), int(y-max / step) + 1) {
         let y = i * step
-        line((x-min, y, 0), (x-max, y, 0), stroke: grid-style)
+        line(at((x-min, y, 0)), at((x-max, y, 0)), stroke: grid-style)
       }
     }
 
     // Draw axes
     if show-axes {
       // Z-Axis (vertical)
-      line((0, 0, 0), (0, 0, z-max + 1), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "z-axis")
-      content((0, 0, z-max + 1.2), text(fill: axis-col, z-label))
+      line(at((0, 0, 0)), at((0, 0, z-max + 1)), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "z-axis")
+      content(at((0, 0, z-max + 1.2)), text(fill: axis-col, z-label))
 
       // X-Axis
-      line((0, 0, 0), (x-max + 1, 0, 0), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "x-axis")
-      content((x-max + 1.2, 0, 0), text(fill: axis-col, x-label))
+      line(at((0, 0, 0)), at((x-max + 1, 0, 0)), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "x-axis")
+      content(at((x-max + 1.2, 0, 0)), text(fill: axis-col, x-label))
 
       // Y-Axis
-      line((0, 0, 0), (0, y-max + 1, 0), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "y-axis")
-      content((0, y-max + 1.2, 0), text(fill: axis-col, y-label))
+      line(at((0, 0, 0)), at((0, y-max + 1, 0)), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "y-axis")
+      content(at((0, y-max + 1.2, 0)), text(fill: axis-col, y-label))
 
       // Tick marks
       if show-ticks {
@@ -84,19 +167,19 @@
         for i in range(int(x-min / step), int(x-max / step) + 1) {
           if i != 0 {
             let x = i * step
-            line((x, 0, -tick-len), (x, 0, tick-len), stroke: tick-style)
+            line(at((x, 0, -tick-len)), at((x, 0, tick-len)), stroke: tick-style)
           }
         }
         for i in range(int(y-min / step), int(y-max / step) + 1) {
           if i != 0 {
             let y = i * step
-            line((0, y, -tick-len), (0, y, tick-len), stroke: tick-style)
+            line(at((0, y, -tick-len)), at((0, y, tick-len)), stroke: tick-style)
           }
         }
         for i in range(int(z-min / step), int(z-max / step) + 1) {
           if i != 0 {
             let z = i * step
-            line((-tick-len, 0, z), (tick-len, 0, z), stroke: tick-style)
+            line(at((-tick-len, 0, z)), at((tick-len, 0, z)), stroke: tick-style)
           }
         }
       }
@@ -104,9 +187,53 @@
 
     // Draw user objects
     let bounds = (x: x-domain, y: y-domain, z: z-domain)
+    let point-col = theme.at("plot", default: (:)).at("highlight", default: black)
+    let vec-col = theme.at("plot", default: (:)).at("stroke", default: black)
+
+    // A 3D object has to be drawn through the same camera as the axes, so
+    // these are rendered here rather than handed to `draw-geo', which emits
+    // raw coordinates for cetz's own transform and would land somewhere else
+    // entirely the moment the projection stopped being flat.
+    let draw-3d(obj) = {
+      let kind = obj.at("type", default: none)
+      if kind == "point" {
+        let col = point-col
+        content(at((obj.x, obj.y, obj.at("z", default: 0))),
+                box(fill: col, radius: 50%, width: 5pt, height: 5pt))
+        if obj.at("label", default: none) != none {
+          content(at((obj.x, obj.y, obj.at("z", default: 0))),
+                  text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
+        }
+      } else if kind in ("vector", "vec-3d") {
+        let from = obj.at("origin", default: (0, 0, 0))
+        let to = if kind == "vec-3d" {
+          obj.end
+        } else {
+          (obj.x, obj.y, obj.at("z", default: 0))
+        }
+        let from = if kind == "vec-3d" { obj.at("start", default: (0, 0, 0)) } else { from }
+        let col = if obj.at("color", default: auto) == auto { vec-col } else { obj.color }
+        line(at(from), at(to), stroke: (paint: col, thickness: 1.5pt),
+             mark: (end: "stealth", fill: col))
+        if obj.at("label", default: none) != none {
+          content(at(to), text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
+        }
+      }
+    }
+
     for obj in objects.pos() {
       if type(obj) == dictionary and obj.at("type", default: none) != none {
-        draw-geo(obj, theme, bounds: bounds)
+        // 3D only when it actually carries a z; a flat point still belongs to
+        // `draw-geo', which knows every 2D style this module has.
+        // Only the kinds `draw-3d' actually knows, and only when they carry a
+        // z: a flat point still belongs to `draw-geo', which knows every 2D
+        // style this module has.
+        let kind = obj.at("type", default: "")
+        let is3d = (not legacy-view
+                    and kind in ("point", "vector", "vec-3d", "point-3d")
+                    and (obj.at("z", default: none) != none
+                         or kind in ("vec-3d", "point-3d")))
+        if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
       } else if type(obj) == array {
         // Handle arrays of objects (e.g., from vec-add, vec-components)
         for sub-obj in obj {
