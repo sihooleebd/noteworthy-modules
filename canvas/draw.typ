@@ -33,11 +33,20 @@
     stroke: (paint: theme.at("plot", default: (:)).at("stroke", default: black), thickness: 1pt),
   )
 
-  if obj.style != auto and obj.style != none {
-    base + obj.style
-  } else {
-    base
+  if obj.style == auto or obj.style == none { return base }
+
+  // Merged a level deeper than `+' goes.  Adding dictionaries replaces whole
+  // values, so `style: (stroke: (dash: "dashed"))' threw the theme's paint
+  // and thickness away with it and the line came out in cetz's default black
+  // -- invisible on a dark page.  Saying one part of a stroke now keeps the
+  // rest, which is what asking for a dash alone plainly means.  A stroke
+  // given as a colour or a stroke value replaces, having no parts to keep.
+  let merged = base + obj.style
+  if (type(base.stroke) == dictionary
+      and type(obj.style.at("stroke", default: none)) == dictionary) {
+    merged.stroke = base.stroke + obj.style.stroke
   }
+  merged
 }
 
 /// The colour of a stroke, however it was written
