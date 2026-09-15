@@ -3,6 +3,7 @@
 // =====================================================
 
 #import "point.typ": is-point, point
+#import "core.typ": is-angle-value
 
 /// Create a circle
 ///
@@ -75,17 +76,43 @@
 ///
 /// Parameters:
 /// - center: Center point of the arc
-/// - p1: Start point on the arc
-/// - p2: End point on the arc
+/// - p1: Start point on the arc, or the start angle
+/// - p2: End point on the arc, or the stop angle
+/// - radius: Required when p1/p2 are angles; taken from p1 otherwise
 /// - label-anchor: Optional anchor for label positioning
 /// - style: Optional style overrides
-#let arc(center, p1, p2, label: none, label-anchor: none, style: auto) = {
+///
+/// Either form works:
+///   arc((0, 0), (2, 0), (0, 2))              // through two points
+///   arc((0, 0), 0deg, 90deg, radius: 2)      // by angle, counterclockwise
+#let arc(center, p1, p2, radius: auto, label: none, label-anchor: none, style: auto) = {
   let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+
+  // Angle form: p1 and p2 are the sweep, counterclockwise from p1
+  if is-angle-value(p1) or is-angle-value(p2) {
+    assert(
+      is-angle-value(p1) and is-angle-value(p2),
+      message: "arc: give both ends as angles, or both as points",
+    )
+    assert(radius != auto, message: "arc: an arc given by angles needs a radius")
+    return (
+      type: "arc",
+      center: c,
+      radius: radius,
+      start: p1,
+      end: p2,
+      label: label,
+      label-anchor: label-anchor,
+      style: style,
+    )
+  }
   let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
   let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
 
   // Calculate radius from center to p1
-  let r = calc.sqrt(calc.pow(pt1.x - c.x, 2) + calc.pow(pt1.y - c.y, 2))
+  let r = if radius != auto { radius } else {
+    calc.sqrt(calc.pow(pt1.x - c.x, 2) + calc.pow(pt1.y - c.y, 2))
+  }
 
   // Calculate angles from center to p1 and p2
   // Note: calc.atan2 takes (x, y) in Typst (not standard y, x)
