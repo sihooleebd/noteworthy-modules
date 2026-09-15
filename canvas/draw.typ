@@ -40,6 +40,19 @@
   }
 }
 
+/// The colour of a stroke, however it was written
+///
+/// A stroke may be a dictionary, a bare colour (`style: (stroke: red)'), or a
+/// stroke value (`2pt + red'); only the first answers to `.at("paint")', and
+/// asking the others raised "type color has no method `at'".
+#let stroke-paint(st, default: black) = {
+  if st == none { default }
+  else if type(st) == color { st }
+  else if type(st) == stroke { st.paint }
+  else if type(st) == dictionary { st.at("paint", default: default) }
+  else { default }
+}
+
 /// Get fill style for polygons/circles
 #let get-fill-style(obj, theme) = {
   if obj.at("fill", default: none) != none {
@@ -629,7 +642,7 @@
       let r = obj.radius * 1.18
       content(
         (obj.center.x + r * calc.cos(mid), obj.center.y + r * calc.sin(mid)),
-        text(fill: style.stroke.at("paint", default: black), obj.label),
+        text(fill: stroke-paint(style.stroke), obj.label),
       )
     }
   } else {
@@ -720,7 +733,7 @@
   let pts = obj.points.map(p => (p.x, p.y))
   line(..pts, close: obj.at("close", default: false), stroke: style.stroke)
   if obj.at("label", default: none) != none {
-    content(pts.last(), text(fill: style.stroke.at("paint", default: black),
+    content(pts.last(), text(fill: stroke-paint(style.stroke),
                              format-label(obj, obj.label)),
             anchor: "west", padding: 0.12)
   }
@@ -730,7 +743,7 @@
 #let draw-brace(obj, theme) = {
 import cetz.draw: *
 let style = get-line-style(obj, theme)
-let col = style.stroke.at("paint", default: black)
+let col = stroke-paint(style.stroke)
 
 let a = (obj.p1.x, obj.p1.y)
 let b = (obj.p2.x, obj.p2.y)
@@ -1506,7 +1519,7 @@ if obj.at("label", default: none) != none {
 
     // Extract paint safely
     let text-fill = if type(style.stroke) == dictionary {
-      style.stroke.at("paint", default: black)
+      stroke-paint(style.stroke)
     } else {
       style.stroke
     }

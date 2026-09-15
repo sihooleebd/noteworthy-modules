@@ -3,7 +3,7 @@
 // =====================================================
 
 #import "@preview/cetz:0.4.2"
-#import "draw.typ": draw-geo, get-line-style, format-label, brace-flip
+#import "draw.typ": draw-geo, get-line-style, format-label, brace-flip, stroke-paint
 
 // =====================================================
 // Camera
@@ -377,7 +377,8 @@
           content(at((obj.x, obj.y, zc)),
                   text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
         }
-      } else if kind in ("segment", "circle", "arc", "polygon", "text", "brace", "polyline") {
+      } else if kind in ("segment", "circle", "arc", "polygon", "text", "brace", "polyline",
+                         "func", "data-series") {
         // A flat shape, laid on the ground plane and put through the camera.
         // Handing these to `draw-geo' instead drew them in the canvas plane,
         // ignoring the camera: a circle came out a circle on screen rather
@@ -399,7 +400,7 @@
           if obj.at("label", default: none) != none {
             content(flat((obj.p1.x + obj.p2.x) / 2, (obj.p1.y + obj.p2.y) / 2,
                          (zof(obj.p1) + zof(obj.p2)) / 2),
-                    text(fill: style.stroke.at("paint", default: black),
+                    text(fill: stroke-paint(style.stroke),
                          format-label(obj, obj.label)),
                     anchor: "south", padding: 0.1)
           }
@@ -421,13 +422,57 @@
           } else {
             line(..pts, stroke: style.stroke)
           }
+        } else if kind in ("func", "data-series") {
+          // Plotted curves, put through the camera.  A point with two
+          // components lies on the ground plane, as every flat shape here
+          // does; one with three is a curve in space.  So a parametric
+          // function is 3D exactly when it returns three numbers, and
+          // nothing else has to be said.
+          let lift(v) = if type(v) == array and v.len() >= 3 {
+            (v.at(0), v.at(1), v.at(2))
+          } else if type(v) == array {
+            (v.at(0), v.at(1), 0)
+          } else {
+            v
+          }
+          let pts = if kind == "func" {
+            let (t0, t1) = obj.domain
+            let n = calc.max(2, obj.at("samples", default: 200))
+            range(n + 1).map(i => {
+              let t = t0 + (t1 - t0) * i / n
+              let v = (obj.f)(t)
+              // `standard' is y = f(t), which is a flat curve: it lies on the
+              // ground plane like any other.
+              if obj.at("func-type", default: "standard") == "standard" { (t, v, 0) }
+              else { lift(v) }
+            })
+          } else {
+            obj.data.map(lift)
+          }
+          let col = stroke-paint(style.stroke)
+          let kind-of-plot = obj.at("plot-type", default: "line")
+          if kind == "func" or kind-of-plot in ("line", "both") {
+            line(..pts.map(p => at((p.at(0), p.at(1), p.at(2)))), stroke: style.stroke)
+          }
+          if kind == "data-series" and kind-of-plot in ("scatter", "both") {
+            for p in pts {
+              content(at((p.at(0), p.at(1), p.at(2))),
+                      box(fill: col, radius: 50%, width: 4pt, height: 4pt))
+            }
+          }
+          if obj.at("label", default: none) != none {
+            let last = pts.last()
+            content(at((last.at(0), last.at(1), last.at(2))),
+                    text(fill: col, size: 0.8em, format-label(obj, obj.label)),
+                    anchor: "west", padding: 0.12)
+          }
         } else if kind == "polyline" {
           line(..obj.points.map(pt => flat(pt.x, pt.y, zof(pt))),
                close: obj.at("close", default: false), stroke: style.stroke)
           if obj.at("label", default: none) != none {
             let last = obj.points.last()
             content(flat(last.x, last.y, zof(last)),
-                    text(fill: style.stroke.at("paint", default: black),
+                    text(fill: stroke-paint(style.stroke),
                          format-label(obj, obj.label)),
                     anchor: "west", padding: 0.12)
           }
@@ -439,7 +484,7 @@
           // drawn over the picture, not an object in it: a dimension marker
           // keeps its shape whatever the camera does, the way one does on a
           // drafting sheet.
-          let col = style.stroke.at("paint", default: black)
+          let col = stroke-paint(style.stroke)
           let a = flat(obj.p1.x, obj.p1.y, zof(obj.p1))
           let b = flat(obj.p2.x, obj.p2.y, zof(obj.p2))
           let flip = brace-flip(obj, a.at(0), a.at(1), b.at(0), b.at(1))
@@ -516,11 +561,12 @@
                     and kind in ("point", "vector", "vec-3d", "point-3d",
                                  "surface-3d",
                                  "segment", "circle", "arc", "polygon", "text",
-                                 "brace", "polyline")
+                                 "brace", "polyline", "func", "data-series")
                     and (obj.at("z", default: none) != none
                          or kind in ("point", "vec-3d", "point-3d", "surface-3d",
                                      "segment", "circle", "arc", "polygon",
-                                     "text", "brace", "polyline")))
+                                     "text", "brace", "polyline", "func",
+                                     "data-series")))
         if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
       } else {
         // Anything that is not one of our geometry dictionaries is drawn as
