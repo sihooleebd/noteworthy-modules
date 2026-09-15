@@ -55,6 +55,18 @@
   type(obj) == dictionary and obj.at("type", default: none) == "point"
 }
 
+/// Coerce a point object or (x, y) / (x, y, z) tuple to a point
+///
+/// A third coordinate is kept rather than dropped, so every shape built out
+/// of points can be given one and placed off the ground plane.  The flat
+/// canvases read `.x' and `.y' and are unaffected; `space-canvas' reads `.z'.
+#let as-point(p) = {
+  if is-point(p) { p } else { point(p.at(0), p.at(1), z: p.at(2, default: none)) }
+}
+
+  type(obj) == dictionary and obj.at("type", default: none) == "point"
+}
+
 /// Get point coordinates as tuple
 #let point-coords(p) = {
   if p.z != none { (p.x, p.y, p.z) } else { (p.x, p.y) }
@@ -84,8 +96,8 @@
 /// - p2: Second point (point object or (x, y) tuple)
 /// Returns: The distance as a float
 #let distance(p1, p2) = {
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let pt2 = as-point(p2)
 
   let dx = pt2.x - pt1.x
   let dy = pt2.y - pt1.y
@@ -100,19 +112,19 @@
 
 /// Get the x-coordinate of a point
 #let x(p) = {
-  let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
+  let pt = as-point(p)
   pt.x
 }
 
 /// Get the y-coordinate of a point
 #let y(p) = {
-  let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
+  let pt = as-point(p)
   pt.y
 }
 
 /// Get the z-coordinate of a point (returns none for 2D points)
 #let z(p) = {
-  let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
+  let pt = as-point(p)
   pt.z
 }
 
@@ -141,12 +153,13 @@
   fill: none,
   frame: none,
 ) = {
-  let p = if is-point(pos) { pos } else { point(pos.at(0), pos.at(1)) }
+  let p = as-point(pos)
 
   (
     type: "text",
     x: p.x,
     y: p.y,
+    z: p.z,
     body: body,
     anchor: anchor,
     color: color,

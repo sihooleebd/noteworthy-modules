@@ -2,7 +2,7 @@
 // ANGLE - Angle geometry object
 // =====================================================
 
-#import "point.typ": is-point, point
+#import "point.typ": is-point, point, as-point
 #import "core.typ": is-angle-value
 
 /// Create an angle from three points (vertex in the middle)
@@ -25,7 +25,7 @@
 /// first to the second, so 0deg to 300deg is the 300deg one.  Pass `reflex'
 /// to override that.
 #let angle(p1, vertex, p2, label: none, radius: 0.5, label-radius: auto, fill: auto, style: auto, reflex: "auto") = {
-  let vtx = if is-point(vertex) { vertex } else { point(vertex.at(0), vertex.at(1)) }
+  let vtx = as-point(vertex)
 
   // Angle form: arms are directions, and only their direction is drawn, so
   // put a point one unit out along each.
@@ -52,8 +52,8 @@
     )
   }
 
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let pt2 = as-point(p2)
 
   (
     type: "angle",
@@ -77,9 +77,9 @@
 /// - p2: Second point
 /// - radius: Size of the right angle marker (default: 0.3)
 #let right-angle(p1, vertex, p2, radius: 0.3, style: auto) = {
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let vtx = if is-point(vertex) { vertex } else { point(vertex.at(0), vertex.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let vtx = as-point(vertex)
+  let pt2 = as-point(p2)
 
   (
     type: "right-angle",

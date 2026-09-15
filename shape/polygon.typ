@@ -2,7 +2,7 @@
 // POLYGON - Polygon geometry object
 // =====================================================
 
-#import "point.typ": is-point, point
+#import "point.typ": is-point, point, as-point
 
 /// Create a polygon from a list of points
 ///
@@ -17,7 +17,7 @@
   let pts = points
     .pos()
     .map(p => {
-      if is-point(p) { p } else { point(p.at(0), p.at(1)) }
+      as-point(p)
     })
 
   (
@@ -47,7 +47,7 @@
 /// - fill: Optional fill color
 /// - label-padding: Label padding value (default: 0.2)
 #let rectangle(corner, width, height, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
-  let c = if is-point(corner) { corner } else { point(corner.at(0), corner.at(1)) }
+  let c = as-point(corner)
   let p1 = c
   let p2 = point(c.x + width, c.y)
   let p3 = point(c.x + width, c.y + height)
@@ -67,8 +67,8 @@
 /// - fill: Optional fill color
 /// - label-padding: Label padding value (default: 0.2)
 #let regular-polygon(center, first-vertex, n, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
-  let fv = if is-point(first-vertex) { first-vertex } else { point(first-vertex.at(0), first-vertex.at(1)) }
+  let c = as-point(center)
+  let fv = as-point(first-vertex)
 
   // Calculate radius and start angle from first-vertex
   let dx = fv.x - c.x
@@ -98,7 +98,7 @@
 /// Create a square
 #let square(center, side, label: none, label-anchor: none, fill: none, style: auto, label-padding: 0.2) = {
   let half = side / 2
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+  let c = as-point(center)
   polygon(
     point(c.x - half, c.y - half),
     point(c.x + half, c.y - half),

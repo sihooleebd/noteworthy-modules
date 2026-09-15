@@ -3,7 +3,7 @@
 // =====================================================
 
 #import "@preview/cetz:0.4.2"
-#import "draw.typ": draw-geo
+#import "draw.typ": draw-geo, get-line-style, format-label
 
 // =====================================================
 // Camera
@@ -173,31 +173,65 @@
     let (y-min, y-max) = y-domain
     let (z-min, z-max) = z-domain
 
-    // Draw grid
+    // Everything the camera has to sort: the scaffolding and, below, every
+    // facet of every surface.  Drawn in two passes -- axes first, objects
+    // after -- an axis went under whatever was drawn later however far
+    // behind it that was, so the far side of a cone painted over the z-axis
+    // standing in front of it.
+    //
+    // A long line has no single depth, so each one is cut into pieces and
+    // each piece sorted on its own.  That is what lets an axis pass behind
+    // an object and come out in front of it further along.
+    let pieces(a, b, n, style, mark: none) = {
+      let lerp(t) = (
+        a.at(0) + (b.at(0) - a.at(0)) * t,
+        a.at(1) + (b.at(1) - a.at(1)) * t,
+        a.at(2) + (b.at(2) - a.at(2)) * t,
+      )
+      let out = ()
+      for i in range(n) {
+        let p0 = lerp(i / n)
+        let p1 = lerp((i + 1) / n)
+        let mid = ((p0.at(0) + p1.at(0)) / 2,
+                   (p0.at(1) + p1.at(1)) / 2,
+                   (p0.at(2) + p1.at(2)) / 2)
+        // The arrow belongs to the far end, so only the last piece carries it.
+        let el = if mark != none and i == n - 1 {
+          line(at(p0), at(p1), stroke: style, mark: mark)
+        } else {
+          line(at(p0), at(p1), stroke: style)
+        }
+        out.push((depth: _dot(mid, cam.fwd), el: el))
+      }
+      out
+    }
+
+    let deep = ()
+
+    // Grid
     if show-grid {
       for i in range(int(x-min / step), int(x-max / step) + 1) {
         let x = i * step
-        line(at((x, y-min, 0)), at((x, y-max, 0)), stroke: grid-style)
+        deep += pieces((x, y-min, 0), (x, y-max, 0), 12, grid-style)
       }
       for i in range(int(y-min / step), int(y-max / step) + 1) {
         let y = i * step
-        line(at((x-min, y, 0)), at((x-max, y, 0)), stroke: grid-style)
+        deep += pieces((x-min, y, 0), (x-max, y, 0), 12, grid-style)
       }
     }
 
-    // Draw axes
+    // Axes
+    let axis-labels = ()
     if show-axes {
-      // Z-Axis (vertical)
-      line(at((0, 0, 0)), at((0, 0, z-max + 1)), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "z-axis")
-      content(at((0, 0, z-max + 1.2)), text(fill: axis-col, z-label))
-
-      // X-Axis
-      line(at((0, 0, 0)), at((x-max + 1, 0, 0)), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "x-axis")
-      content(at((x-max + 1.2, 0, 0)), text(fill: axis-col, x-label))
-
-      // Y-Axis
-      line(at((0, 0, 0)), at((0, y-max + 1, 0)), stroke: axis-style, mark: (end: "stealth", fill: axis-col), name: "y-axis")
-      content(at((0, y-max + 1.2, 0)), text(fill: axis-col, y-label))
+      let arrow = (end: "stealth", fill: axis-col)
+      deep += pieces((0, 0, 0), (0, 0, z-max + 1), 16, axis-style, mark: arrow)
+      deep += pieces((0, 0, 0), (x-max + 1, 0, 0), 16, axis-style, mark: arrow)
+      deep += pieces((0, 0, 0), (0, y-max + 1, 0), 16, axis-style, mark: arrow)
+      axis-labels = (
+        (at((0, 0, z-max + 1.2)), z-label),
+        (at((x-max + 1.2, 0, 0)), x-label),
+        (at((0, y-max + 1.2, 0)), y-label),
+      )
 
       // Tick marks
       if show-ticks {
@@ -205,44 +239,31 @@
         for i in range(int(x-min / step), int(x-max / step) + 1) {
           if i != 0 {
             let x = i * step
-            line(at((x, 0, -tick-len)), at((x, 0, tick-len)), stroke: tick-style)
+            deep += pieces((x, 0, -tick-len), (x, 0, tick-len), 1, tick-style)
           }
         }
         for i in range(int(y-min / step), int(y-max / step) + 1) {
           if i != 0 {
             let y = i * step
-            line(at((0, y, -tick-len)), at((0, y, tick-len)), stroke: tick-style)
+            deep += pieces((0, y, -tick-len), (0, y, tick-len), 1, tick-style)
           }
         }
         for i in range(int(z-min / step), int(z-max / step) + 1) {
           if i != 0 {
             let z = i * step
-            line(at((-tick-len, 0, z)), at((tick-len, 0, z)), stroke: tick-style)
+            deep += pieces((-tick-len, 0, z), (tick-len, 0, z), 1, tick-style)
           }
         }
       }
     }
 
-    // Draw user objects
     let bounds = (x: x-domain, y: y-domain, z: z-domain)
     let point-col = theme.at("plot", default: (:)).at("highlight", default: black)
     let vec-col = theme.at("plot", default: (:)).at("stroke", default: black)
 
-    // A 3D object has to be drawn through the same camera as the axes, so
-    // these are rendered here rather than handed to `draw-geo', which emits
-    // raw coordinates for cetz's own transform and would land somewhere else
-    // entirely the moment the projection stopped being flat.
-    let draw-3d(obj) = {
-      let kind = obj.at("type", default: none)
-      if kind == "point" {
-        let col = point-col
-        content(at((obj.x, obj.y, obj.at("z", default: 0))),
-                box(fill: col, radius: 50%, width: 5pt, height: 5pt))
-        if obj.at("label", default: none) != none {
-          content(at((obj.x, obj.y, obj.at("z", default: 0))),
-                  text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
-        }
-      } else if kind == "surface-3d" {
+    // Every facet of a surface, each tagged with its depth, for the one
+    // back-to-front pass below.
+    let surface-entries(obj) = {
         let (u0, u1) = obj.u-domain
         let (v0, v1) = obj.v-domain
         let base-col = if obj.color == auto { vec-col } else { obj.color }
@@ -250,9 +271,10 @@
         let ltn = calc.sqrt(_dot(lt, lt))
         let lt = if ltn > 0 { lt.map(c => c / ltn) } else { (0, 0, 1) }
 
-        // Build every facet with its centroid depth, then paint far ones
-        // first.  Without the sort the last facet drawn wins regardless of
-        // where it is, and the far side of the cone covers the near side.
+        // Every facet with its centroid depth.  These go into the same
+        // list as the axes and grid, so the whole picture is painted back
+        // to front in one pass -- without that the last thing drawn wins
+        // regardless of where it is.
         let facets = ()
         for i in range(obj.u-steps) {
           for j in range(obj.v-steps) {
@@ -282,7 +304,8 @@
             facets.push((depth: _dot(c, cam.fwd), corners: corners, normal: n))
           }
         }
-        for facet in facets.sorted(key: f => f.depth) {
+        let out = ()
+        for facet in facets {
           let fill-col = if obj.shade {
             let t = calc.max(0.15, calc.abs(_dot(facet.normal, lt)))
             // Not rounded to whole percent: at a fine mesh, neighbouring
@@ -302,8 +325,91 @@
           } else {
             obj.stroke
           }
-          line(..facet.corners.map(at), close: true,
-               fill: fill-col, stroke: edge)
+          out.push((depth: facet.depth,
+                    el: line(..facet.corners.map(at), close: true,
+                             fill: fill-col, stroke: edge)))
+        }
+        out
+    }
+
+    // Draw user objects
+
+    // A 3D object has to be drawn through the same camera as the axes, so
+    // these are rendered here rather than handed to `draw-geo', which emits
+    // raw coordinates for cetz's own transform and would land somewhere else
+    // entirely the moment the projection stopped being flat.
+    let draw-3d(obj) = {
+      let kind = obj.at("type", default: none)
+      if kind == "point" {
+        // A point with no z sits on the ground plane, like every other flat
+        // shape here; it used to go to `draw-geo' and land in the canvas
+        // plane instead, which put it nowhere in particular.
+        let col = if (obj.at("style", default: auto) != auto
+                      and type(obj.at("style", default: none)) == dictionary
+                      and "fill" in obj.style) {
+          obj.style.fill
+        } else { point-col }
+        let zc = { let v = obj.at("z", default: 0); if v == none { 0 } else { v } }
+        content(at((obj.x, obj.y, zc)),
+                box(fill: col, radius: 50%, width: 5pt, height: 5pt))
+        if obj.at("label", default: none) != none {
+          content(at((obj.x, obj.y, zc)),
+                  text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
+        }
+      } else if kind in ("segment", "circle", "arc", "polygon", "text") {
+        // A flat shape, laid on the ground plane and put through the camera.
+        // Handing these to `draw-geo' instead drew them in the canvas plane,
+        // ignoring the camera: a circle came out a circle on screen rather
+        // than an ellipse lying on the floor, and a segment pointed wherever
+        // the screen said rather than where the world did.
+        // Only `style' is read, and not every flat kind has one -- `text-at'
+        // carries `color' instead -- so ask with a dictionary that always does.
+        let style = get-line-style((style: obj.at("style", default: auto)), theme)
+        let fill-col = obj.at("fill", default: none)
+        // Every point carries its own height.  `point' stores `z: none'
+        // rather than omitting the key, so a default never fires: a shape
+        // given plain (x, y) pairs sits on the ground plane, and one given
+        // (x, y, z) triples sits wherever it was put.
+        let zof(p) = { let v = p.at("z", default: 0); if v == none { 0 } else { v } }
+        let flat(x, y, z) = at((x, y, z))
+        if kind == "segment" {
+          line(flat(obj.p1.x, obj.p1.y, zof(obj.p1)),
+               flat(obj.p2.x, obj.p2.y, zof(obj.p2)), stroke: style.stroke)
+          if obj.at("label", default: none) != none {
+            content(flat((obj.p1.x + obj.p2.x) / 2, (obj.p1.y + obj.p2.y) / 2,
+                         (zof(obj.p1) + zof(obj.p2)) / 2),
+                    text(fill: style.stroke.at("paint", default: black),
+                         format-label(obj, obj.label)),
+                    anchor: "south", padding: 0.1)
+          }
+        } else if kind == "circle" or kind == "arc" {
+          // Sampled rather than drawn as an arc: the camera turns a circle
+          // into an ellipse, and an ellipse at an angle is not something
+          // cetz's `arc' can be asked for.
+          let steps = 64
+          let (a0, a1) = if kind == "arc" { (obj.start, obj.end) } else { (0deg, 360deg) }
+          let a1 = if kind == "arc" and a1 < a0 { a1 + 360deg } else { a1 }
+          let pts = range(steps + 1).map(i => {
+            let a = a0 + (a1 - a0) * i / steps
+            flat(obj.center.x + obj.radius * calc.cos(a),
+                 obj.center.y + obj.radius * calc.sin(a),
+                 zof(obj.center))
+          })
+          if kind == "circle" {
+            line(..pts, close: true, stroke: style.stroke, fill: fill-col)
+          } else {
+            line(..pts, stroke: style.stroke)
+          }
+        } else if kind == "polygon" {
+          line(..obj.points.map(pt => flat(pt.x, pt.y, zof(pt))), close: true,
+               stroke: style.stroke, fill: fill-col)
+        } else if kind == "text" {
+          let col = if obj.color == auto {
+            theme.at("plot", default: (:)).at("stroke", default: black)
+          } else { obj.color }
+          content(flat(obj.x, obj.y, zof(obj)), text(fill: col, obj.body),
+                  anchor: obj.anchor, angle: obj.angle, padding: obj.padding,
+                  fill: obj.fill, frame: obj.frame, stroke: none)
         }
       } else if kind == "brace-3d" {
         let col = if obj.color == auto { vec-col } else { obj.color }
@@ -347,8 +453,31 @@
       }
     }
 
+    // Surfaces join the scaffolding, and the whole picture is painted in one
+    // pass from the back forwards.  Sorting the facets only among themselves
+    // is what let a far-side facet cover an axis in front of it.
+    let flat = ()
     for obj in objects.pos() {
+      if type(obj) == array { for sub in obj { flat.push(sub) } } else { flat.push(obj) }
+    }
+    for obj in flat {
+      if (type(obj) == dictionary and obj.at("type", default: none) == "surface-3d"
+          and not legacy-view) {
+        deep += surface-entries(obj)
+      }
+    }
+    for entry in deep.sorted(key: e => e.depth) { entry.el }
+
+    // Labels sit outside the picture, past the end of each axis, so they are
+    // never what an object should be hiding.
+    for (pos, body) in axis-labels {
+      content(pos, text(fill: axis-col, body))
+    }
+
+    for obj in flat {
       if type(obj) == dictionary and obj.at("type", default: none) != none {
+        // Already painted above, in the sorted pass.
+        if obj.type == "surface-3d" and not legacy-view { continue }
         // 3D only when it actually carries a z; a flat point still belongs to
         // `draw-geo', which knows every 2D style this module has.
         // Only the kinds `draw-3d' actually knows, and only when they carry a
@@ -357,31 +486,24 @@
         let kind = obj.at("type", default: "")
         let is3d = (not legacy-view
                     and kind in ("point", "vector", "vec-3d", "point-3d",
-                                 "surface-3d", "brace-3d")
+                                 "surface-3d", "brace-3d",
+                                 "segment", "circle", "arc", "polygon", "text")
                     and (obj.at("z", default: none) != none
-                         or kind in ("vec-3d", "point-3d", "surface-3d", "brace-3d")))
+                         or kind in ("point", "vec-3d", "point-3d", "surface-3d",
+                                     "brace-3d", "segment", "circle", "arc",
+                                     "polygon", "text")))
         if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
-      } else if type(obj) == array {
-        // Handle arrays of objects (e.g., from vec-add, vec-components)
-        for sub-obj in obj {
-          if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
-            draw-geo(sub-obj, theme, bounds: bounds)
-          } else {
-            // Anything that is not one of our geometry dictionaries is drawn
-            // as it is.  `draw-vec-3d' and `draw-point-3d' return arrays of
-            // cetz elements, so without this they fell into this branch, each
-            // element failed the dictionary test, and the whole thing was
-            // dropped -- silently, leaving a canvas with axes and nothing in
-            // it.  That is every 3D vector and point this module can draw.
-            //
-            // Wrapped in an array because a cetz element is a function and
-            // the loop joins what each turn produces: a bare one cannot be
-            // joined with the arrays the other branches return.
-            (sub-obj,)
-          }
-        }
       } else {
-        obj
+        // Anything that is not one of our geometry dictionaries is drawn as
+        // it is.  `draw-vec-3d' and `draw-point-3d' return arrays of cetz
+        // elements, so without this each element failed the dictionary test
+        // and the whole thing was dropped -- silently, leaving a canvas with
+        // axes and nothing in it.
+        //
+        // Wrapped in an array because a cetz element is a function and the
+        // loop joins what each turn produces: a bare one cannot be joined
+        // with the arrays the other branches return.
+        (obj,)
       }
     }
   })

@@ -2,7 +2,7 @@
 // INTERSECT - Intersection operations between geometry objects
 // =====================================================
 
-#import "point.typ": is-point, point
+#import "point.typ": is-point, point, as-point
 #import "line.typ": is-line, is-ray, is-segment
 #import "circle.typ": is-circle
 
@@ -272,7 +272,7 @@
 
 /// Check if a point lies on a linear object
 #let point-on-linear(pt, linear) = {
-  let p = if is-point(pt) { pt } else { point(pt.at(0), pt.at(1)) }
+  let p = as-point(pt)
 
   let p1 = if linear.type == "ray" { linear.origin } else { linear.p1 }
   let p2 = if linear.type == "ray" { linear.through } else { linear.p2 }
@@ -299,7 +299,7 @@
 
 /// Check if a point lies on a circle
 #let point-on-circle(pt, circ) = {
-  let p = if is-point(pt) { pt } else { point(pt.at(0), pt.at(1)) }
+  let p = as-point(pt)
 
   let dx = p.x - circ.center.x
   let dy = p.y - circ.center.y

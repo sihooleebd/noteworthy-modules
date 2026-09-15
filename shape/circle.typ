@@ -2,7 +2,7 @@
 // CIRCLE, ARC - Circular geometry objects
 // =====================================================
 
-#import "point.typ": is-point, point
+#import "point.typ": is-point, point, as-point
 #import "core.typ": is-angle-value
 
 /// Create a circle
@@ -13,7 +13,7 @@
 /// - label: Optional label
 /// - style: Optional style overrides (stroke, fill)
 #let circle(center, ..args) = {
-  let pt = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+  let pt = as-point(center)
   let named = args.named()
   let pos = args.pos()
 
@@ -23,7 +23,7 @@
     named.radius
   } else if "through" in named {
     let through = named.through
-    let pt2 = if is-point(through) { through } else { point(through.at(0), through.at(1)) }
+    let pt2 = as-point(through)
     calc.sqrt(calc.pow(pt.x - pt2.x, 2) + calc.pow(pt.y - pt2.y, 2))
   } else {
     panic("circle: must provide radius or through point")
@@ -46,9 +46,9 @@
 /// - p1, p2, p3: Three points on the circle
 /// - label: Optional label
 #let circle-through(p1, p2, p3, label: none, style: auto) = {
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
-  let pt3 = if is-point(p3) { p3 } else { point(p3.at(0), p3.at(1)) }
+  let pt1 = as-point(p1)
+  let pt2 = as-point(p2)
+  let pt3 = as-point(p3)
 
   // Calculate circumcenter using perpendicular bisectors
   let ax = pt1.x
@@ -86,7 +86,7 @@
 ///   arc((0, 0), (2, 0), (0, 2))              // through two points
 ///   arc((0, 0), 0deg, 90deg, radius: 2)      // by angle, counterclockwise
 #let arc(center, p1, p2, radius: auto, label: none, label-anchor: none, style: auto) = {
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+  let c = as-point(center)
 
   // Angle form: p1 and p2 are the sweep, counterclockwise from p1
   if is-angle-value(p1) or is-angle-value(p2) {
@@ -106,8 +106,8 @@
       style: style,
     )
   }
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let pt2 = as-point(p2)
 
   // Calculate radius from center to p1
   let r = if radius != auto { radius } else {
@@ -140,8 +140,8 @@
 /// - label-anchor: Optional anchor for label positioning
 /// - style: Optional style overrides
 #let semicircle(center, start-point, label: none, label-anchor: none, style: auto) = {
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
-  let pt = if is-point(start-point) { start-point } else { point(start-point.at(0), start-point.at(1)) }
+  let c = as-point(center)
+  let pt = as-point(start-point)
 
   // Calculate the end point (180° from start)
   // Vector from center to start
@@ -182,12 +182,12 @@
 /// - from: Optional reference point defining the 0° direction from center
 /// - label: Optional label
 #let point-at-angle(center, angle, radius, from: none, label: none) = {
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+  let c = as-point(center)
 
   // Calculate base angle from reference point, or use 0 (positive x-axis)
   // Note: calc.atan2 takes (x, y) in Typst (not standard y, x)
   let base-angle = if from != none {
-    let b = if is-point(from) { from } else { point(from.at(0), from.at(1)) }
+    let b = as-point(from)
     calc.atan2(b.x - c.x, b.y - c.y)
   } else {
     0deg

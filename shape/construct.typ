@@ -2,7 +2,7 @@
 // CONSTRUCT - Derived geometry construction operations
 // =====================================================
 
-#import "point.typ": is-point, point
+#import "point.typ": is-point, point, as-point
 #import "line.typ": is-segment, line, linear-direction, ray, segment
 #import "core.typ": normalize
 
@@ -39,8 +39,8 @@
     }
   } else if pos.len() == 2 {
     // Two arguments: p1 and p2
-    let pt1 = if is-point(pos.at(0)) { pos.at(0) } else { point(pos.at(0).at(0), pos.at(0).at(1)) }
-    let pt2 = if is-point(pos.at(1)) { pos.at(1) } else { point(pos.at(1).at(0), pos.at(1).at(1)) }
+    let pt1 = as-point(pos.at(0))
+    let pt2 = as-point(pos.at(1))
     point(
       (pt1.x + pt2.x) / 2,
       (pt1.y + pt2.y) / 2,
@@ -80,7 +80,7 @@
 /// - line-obj: The reference line
 /// - through: Point the perpendicular passes through
 #let perpendicular(line-obj, through) = {
-  let pt = if is-point(through) { through } else { point(through.at(0), through.at(1)) }
+  let pt = as-point(through)
 
   let (dx, dy) = linear-direction(line-obj)
   // Perpendicular direction: (-dy, dx)
@@ -94,7 +94,7 @@
 /// - line-obj: The reference line
 /// - through: Point the parallel passes through
 #let parallel(line-obj, through) = {
-  let pt = if is-point(through) { through } else { point(through.at(0), through.at(1)) }
+  let pt = as-point(through)
 
   let (dx, dy) = linear-direction(line-obj)
   let p2 = point(pt.x + dx, pt.y + dy)
@@ -114,9 +114,9 @@
 /// - vertex: The vertex
 /// - p2: Second point (other arm)
 #let bisector(p1, vertex, p2) = {
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let vtx = if is-point(vertex) { vertex } else { point(vertex.at(0), vertex.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let vtx = as-point(vertex)
+  let pt2 = as-point(p2)
 
   // Get normalized direction vectors
   let d1x = pt1.x - vtx.x
@@ -142,8 +142,8 @@
 
 /// Create a circle with center and passing through a point
 #let circle-through-point(center, through-point) = {
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
-  let p = if is-point(through-point) { through-point } else { point(through-point.at(0), through-point.at(1)) }
+  let c = as-point(center)
+  let p = as-point(through-point)
 
   let dx = p.x - c.x
   let dy = p.y - c.y
@@ -158,7 +158,7 @@
 /// - circ: The circle
 /// - at-point: Point on the circle where tangent is drawn
 #let tangent-at(circ, at-point) = {
-  let p = if is-point(at-point) { at-point } else { point(at-point.at(0), at-point.at(1)) }
+  let p = as-point(at-point)
   let c = circ.center
 
   // Radius direction
@@ -173,7 +173,7 @@
 /// Get tangent lines from external point to circle
 /// Returns array of 0, 1, or 2 tangent lines
 #let tangent-from(circ, external-point) = {
-  let p = if is-point(external-point) { external-point } else { point(external-point.at(0), external-point.at(1)) }
+  let p = as-point(external-point)
   let c = circ.center
   let r = circ.radius
 
@@ -214,7 +214,7 @@
 
 /// Reflect a point across a line
 #let reflect-point(pt, across-line) = {
-  let p = if is-point(pt) { pt } else { point(pt.at(0), pt.at(1)) }
+  let p = as-point(pt)
   let l = across-line
 
   // Line direction
@@ -240,8 +240,8 @@
 
 /// Rotate a point around a center by an angle
 #let rotate-point(pt, center, angle) = {
-  let p = if is-point(pt) { pt } else { point(pt.at(0), pt.at(1)) }
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+  let p = as-point(pt)
+  let c = as-point(center)
 
   let dx = p.x - c.x
   let dy = p.y - c.y
@@ -257,14 +257,14 @@
 
 /// Translate a point by a vector
 #let translate-point(pt, dx, dy) = {
-  let p = if is-point(pt) { pt } else { point(pt.at(0), pt.at(1)) }
+  let p = as-point(pt)
   point(p.x + dx, p.y + dy)
 }
 
 /// Scale a point from a center
 #let scale-point(pt, center, factor) = {
-  let p = if is-point(pt) { pt } else { point(pt.at(0), pt.at(1)) }
-  let c = if is-point(center) { center } else { point(center.at(0), center.at(1)) }
+  let p = as-point(pt)
+  let c = as-point(center)
 
   point(
     c.x + (p.x - c.x) * factor,

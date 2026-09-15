@@ -2,7 +2,7 @@
 // LINE, SEGMENT, RAY - Linear geometry objects
 // =====================================================
 
-#import "point.typ": is-point, point
+#import "point.typ": is-point, point, as-point
 
 /// Create a line segment between two points
 /// A segment has definite endpoints and finite length.
@@ -16,8 +16,8 @@
 /// - label-padding: Label padding value (default: 0.2)
 #let segment(p1, p2, label: none, label-anchor: none, style: auto, label-padding: 0.2) = {
   // Convert tuples to points if needed
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let pt2 = as-point(p2)
 
   (
     type: "segment",
@@ -41,8 +41,8 @@
 /// - style: Optional style overrides
 /// - label-padding: Label padding value (default: 0.2)
 #let line(p1, p2, label: none, label-anchor: none, style: auto, label-padding: 0.2) = {
-  let pt1 = if is-point(p1) { p1 } else { point(p1.at(0), p1.at(1)) }
-  let pt2 = if is-point(p2) { p2 } else { point(p2.at(0), p2.at(1)) }
+  let pt1 = as-point(p1)
+  let pt2 = as-point(p2)
 
   (
     type: "line",
@@ -66,8 +66,8 @@
 /// - style: Optional style overrides
 /// - label-padding: Label padding value (default: 0.2)
 #let ray(origin, through, label: none, label-anchor: none, style: auto, label-padding: 0.2) = {
-  let pt1 = if is-point(origin) { origin } else { point(origin.at(0), origin.at(1)) }
-  let pt2 = if is-point(through) { through } else { point(through.at(0), through.at(1)) }
+  let pt1 = as-point(origin)
+  let pt2 = as-point(through)
 
   (
     type: "ray",
@@ -88,8 +88,8 @@
 /// - style: Optional style overrides
 /// - label-padding: Label padding value (default: 0.2)
 #let line-through-direction(p, direction, style: auto, label-padding: 0.2) = {
-  let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
-  let dir = if is-point(direction) { direction } else { point(direction.at(0), direction.at(1)) }
+  let pt = as-point(p)
+  let dir = as-point(direction)
   line(pt, dir, style: style, label-padding: label-padding)
 }
 
@@ -100,7 +100,7 @@
 /// - slope: Slope of the line
 /// - style: Optional style overrides
 #let line-point-slope(p, slope, ..args) = {
-  let pt = if is-point(p) { p } else { point(p.at(0), p.at(1)) }
+  let pt = as-point(p)
   let pt2 = point(pt.x + 1, pt.y + slope)
   
   line(pt, pt2, ..args)
@@ -205,8 +205,8 @@
 /// - label-offset: Further out from the spike the label sits (default: 0.35)
 /// - style: Optional style overrides
 #let brace(from, to, label: none, amplitude: 0.4, flip: false, label-offset: 0.35, style: auto) = {
-  let p1 = if is-point(from) { from } else { point(from.at(0), from.at(1)) }
-  let p2 = if is-point(to) { to } else { point(to.at(0), to.at(1)) }
+  let p1 = as-point(from)
+  let p2 = as-point(to)
 
   (
     type: "brace",
