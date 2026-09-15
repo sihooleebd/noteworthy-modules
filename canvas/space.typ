@@ -285,12 +285,25 @@
         for facet in facets.sorted(key: f => f.depth) {
           let fill-col = if obj.shade {
             let t = calc.max(0.15, calc.abs(_dot(facet.normal, lt)))
-            base-col.lighten(0%).darken(int((1 - t) * 60) * 1%)
+            // Not rounded to whole percent: at a fine mesh, neighbouring
+            // facets would round to the same darkness and the gradient would
+            // step instead of sweep.
+            base-col.darken((1 - t) * 60%)
           } else {
             base-col
           }
+          // Seams.  Two filled polygons that share an edge are antialiased
+          // independently, so a hairline of background survives between them
+          // and the mesh reads as moire even with no wireframe asked for.
+          // Stroking each facet in its own fill closes the gap without
+          // drawing anything you can see as a line.
+          let edge = if obj.stroke == none {
+            (paint: fill-col, thickness: 0.5pt)
+          } else {
+            obj.stroke
+          }
           line(..facet.corners.map(at), close: true,
-               fill: fill-col, stroke: obj.stroke)
+               fill: fill-col, stroke: edge)
         }
       } else if kind == "brace-3d" {
         let col = if obj.color == auto { vec-col } else { obj.color }
