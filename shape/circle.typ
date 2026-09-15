@@ -104,6 +104,24 @@
   )
 }
 
+/// Create a circular sector: the arc plus the two radii, as one closed shape
+///
+/// The wedge you shade when you talk about sector area, or the region a
+/// polar integral sweeps.  `arc' draws only the curve; this closes it back
+/// to the centre so it can be filled.
+///
+/// Parameters:
+/// - center: Center point
+/// - p1: Point on the arc where the sector starts
+/// - p2: Point giving the direction the sector ends at
+/// - fill: Fill colour (default: none, outline only)
+/// - label: Optional label, placed inside the wedge
+/// - style: Optional style overrides
+#let sector(center, p1, p2, fill: none, label: none, label-anchor: none, style: auto) = {
+  let a = arc(center, p1, p2, label: label, label-anchor: label-anchor, style: style)
+  (..a, type: "sector", fill: fill)
+}
+
 /// Create a semicircle from a center and a point on the arc
 /// The semicircle will be drawn 180° counterclockwise from the start point
 ///
