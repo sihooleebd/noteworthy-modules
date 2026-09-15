@@ -224,3 +224,31 @@
 #let is-brace(obj) = {
   type(obj) == dictionary and obj.at("type", default: none) == "brace"
 }
+
+/// A curly brace spanning two points in space, for measuring something.
+///
+/// The 3D twin of `brace' above, and here for that reason: same object,
+/// same parameters, one more coordinate.
+///
+/// The brace itself is flat -- it is an annotation drawn over the picture,
+/// not an object in it -- so only its endpoints are projected.  That is what
+/// you want: a dimension marker should keep its shape whatever the camera is
+/// doing, the way one does on a drafting sheet.
+#let brace-3d(
+  from,
+  to,
+  label: none,
+  amplitude: 0.4,
+  flip: false,
+  color: auto,
+  label-offset: 0.35,
+) = (
+  type: "brace-3d",
+  from: from,
+  to: to,
+  label: label,
+  amplitude: amplitude,
+  flip: flip,
+  color: color,
+  label-offset: label-offset,
+)

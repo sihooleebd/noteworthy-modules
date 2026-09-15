@@ -388,65 +388,6 @@
 }
 
 /// Draw a 3D vector (arrow) in space
-/// A parametric surface, drawn as filled facets.
-///
-/// CeTZ has no 3D renderer -- no depth buffer, no lighting, and cast shadows
-/// are out of reach.  What it does have is filled polygons, and once the
-/// camera is ours a surface is just facets sorted back to front and painted
-/// in that order.  That is a painter's algorithm: correct for a convex shape
-/// like a cone or a sphere, and wrong only where facets genuinely interleave.
-///
-/// `shade' darkens each facet by how far its normal turns from the light,
-/// which is flat Lambert shading -- enough to read as a solid, with none of
-/// the machinery real shading would need.
-#let surface-3d(
-  f,
-  u-domain: (0, 360),
-  v-domain: (0, 1),
-  u-steps: 24,
-  v-steps: 8,
-  color: auto,
-  shade: true,
-  light: (0.4, -0.6, 0.7),
-  stroke: none,
-) = (
-  type: "surface-3d",
-  f: f,
-  u-domain: u-domain,
-  v-domain: v-domain,
-  u-steps: u-steps,
-  v-steps: v-steps,
-  color: color,
-  shade: shade,
-  light: light,
-  stroke: stroke,
-)
-
-/// A curly brace spanning two points in space, for measuring something.
-///
-/// The brace itself is flat -- it is an annotation drawn over the picture,
-/// not an object in it -- so only its endpoints are projected.  That is what
-/// you want: a dimension marker should keep its shape whatever the camera is
-/// doing, the way one does on a drafting sheet.
-#let brace-3d(
-  from,
-  to,
-  label: none,
-  amplitude: 0.4,
-  flip: false,
-  color: auto,
-  label-offset: 0.35,
-) = (
-  type: "brace-3d",
-  from: from,
-  to: to,
-  label: label,
-  amplitude: amplitude,
-  flip: flip,
-  color: color,
-  label-offset: label-offset,
-)
-
 #let draw-vec-3d(
   theme: (:),
   start: (0, 0, 0),

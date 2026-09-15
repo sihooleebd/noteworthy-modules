@@ -11,3 +11,6 @@
 
 // Calculus operations
 #import "calculus.typ": *
+
+// Surfaces in space
+#import "surface.typ": *

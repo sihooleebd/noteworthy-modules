@@ -27,7 +27,8 @@
   line-to-ray,
   line-point-slope,
   brace,
-  is-brace
+  is-brace,
+  brace-3d
 )
 #import "circle.typ": *
 #import "angle.typ": *
