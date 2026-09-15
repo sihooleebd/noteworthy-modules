@@ -78,6 +78,7 @@
 /// - view: Deprecated raw Euler angles (x:, y:, z:); see the camera note
 /// - step: Grid line spacing (default: 1)
 /// - x-label, y-label, z-label: Axis labels
+/// - axis-dir: Which way an axis points, e.g. `(y: -1)' (default: all +1)
 /// - show-axes: Whether to show axes (default: true)
 /// - show-grid: Whether to show XY grid (default: true)
 /// - show-ticks: Whether to show tick marks (default: false)
@@ -104,6 +105,7 @@
   y-label: $y$,
   z-label: $z$,
   show-axes: true,
+  axis-dir: (:),
   show-grid: true,
   show-ticks: false,
   size: none,
@@ -224,13 +226,25 @@
     let axis-labels = ()
     if show-axes {
       let arrow = (end: "stealth", fill: axis-col)
-      deep += pieces((0, 0, 0), (0, 0, z-max + 1), 16, axis-style, mark: arrow)
-      deep += pieces((0, 0, 0), (x-max + 1, 0, 0), 16, axis-style, mark: arrow)
-      deep += pieces((0, 0, 0), (0, y-max + 1, 0), 16, axis-style, mark: arrow)
+      // Which way each axis runs.  An axis drawn to its own maximum is the
+      // sensible default, but which side of the picture that lands on is the
+      // camera's business, and turning the camera to move one arrow moves
+      // everything else with it -- mirroring the scene rather than the axis.
+      // `axis-dir: (y: -1)' points that one at its minimum instead and
+      // leaves the rest of the picture exactly as it was.
+      let ends = (
+        x: if axis-dir.at("x", default: 1) > 0 { x-max + 1 } else { x-min - 1 },
+        y: if axis-dir.at("y", default: 1) > 0 { y-max + 1 } else { y-min - 1 },
+        z: if axis-dir.at("z", default: 1) > 0 { z-max + 1 } else { z-min - 1 },
+      )
+      let past(v) = v + (if v >= 0 { 0.2 } else { -0.2 })
+      deep += pieces((0, 0, 0), (0, 0, ends.z), 16, axis-style, mark: arrow)
+      deep += pieces((0, 0, 0), (ends.x, 0, 0), 16, axis-style, mark: arrow)
+      deep += pieces((0, 0, 0), (0, ends.y, 0), 16, axis-style, mark: arrow)
       axis-labels = (
-        (at((0, 0, z-max + 1.2)), z-label),
-        (at((x-max + 1.2, 0, 0)), x-label),
-        (at((0, y-max + 1.2, 0)), y-label),
+        (at((0, 0, past(ends.z))), z-label),
+        (at((past(ends.x), 0, 0)), x-label),
+        (at((0, past(ends.y), 0)), y-label),
       )
 
       // Tick marks
