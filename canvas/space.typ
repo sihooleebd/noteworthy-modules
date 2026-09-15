@@ -320,10 +320,17 @@
           // and the mesh reads as moire even with no wireframe asked for.
           // Stroking each facet in its own fill closes the gap without
           // drawing anything you can see as a line.
-          let edge = if obj.stroke == none {
+          let edge = if obj.stroke != none {
+            obj.stroke
+          } else if fill-col.components().last() == 100% {
             (paint: fill-col, thickness: 0.5pt)
           } else {
-            obj.stroke
+            // A translucent fill cannot be stroked in its own colour: the
+            // stroke lays a second coat over the fill along every shared
+            // edge, so the alpha doubles there and the mesh shows up as the
+            // grid of solid lines you did not ask for.  Hairline seams are
+            // the lesser of the two, and `stroke' is there to overrule this.
+            none
           }
           out.push((depth: facet.depth,
                     el: line(..facet.corners.map(at), close: true,
