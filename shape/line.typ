@@ -236,3 +236,33 @@
 #let is-brace(obj) = {
   type(obj) == dictionary and obj.at("type", default: none) == "brace"
 }
+
+/// A path through a list of points
+///
+/// `polygon' closes; this does not, which is what a sampled curve wants.
+/// Chief use is a curve that no flat constructor can express -- a profile in
+/// the xz-plane, a rim lying perpendicular to an axis -- since the points may
+/// carry a z and `space-canvas' puts each one through the camera.
+///
+/// Parameters:
+/// - points: The points, in order, as point objects or (x, y) / (x, y, z)
+/// - label: Optional label, drawn at the last point
+/// - close: Join the last point back to the first (default: false)
+/// - style: Optional style overrides
+#let polyline(..points, label: none, close: false, style: auto) = {
+  let pts = points.pos().map(as-point)
+  assert(pts.len() >= 2, message: "polyline: needs at least two points")
+
+  (
+    type: "polyline",
+    points: pts,
+    label: label,
+    close: close,
+    style: style,
+  )
+}
+
+/// Check if object is a polyline
+#let is-polyline(obj) = {
+  type(obj) == dictionary and obj.at("type", default: none) == "polyline"
+}

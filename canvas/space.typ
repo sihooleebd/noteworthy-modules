@@ -363,7 +363,7 @@
           content(at((obj.x, obj.y, zc)),
                   text(fill: col, size: 0.8em, [ #obj.label]), anchor: "west")
         }
-      } else if kind in ("segment", "circle", "arc", "polygon", "text", "brace") {
+      } else if kind in ("segment", "circle", "arc", "polygon", "text", "brace", "polyline") {
         // A flat shape, laid on the ground plane and put through the camera.
         // Handing these to `draw-geo' instead drew them in the canvas plane,
         // ignoring the camera: a circle came out a circle on screen rather
@@ -406,6 +406,16 @@
             line(..pts, close: true, stroke: style.stroke, fill: fill-col)
           } else {
             line(..pts, stroke: style.stroke)
+          }
+        } else if kind == "polyline" {
+          line(..obj.points.map(pt => flat(pt.x, pt.y, zof(pt))),
+               close: obj.at("close", default: false), stroke: style.stroke)
+          if obj.at("label", default: none) != none {
+            let last = obj.points.last()
+            content(flat(last.x, last.y, zof(last)),
+                    text(fill: style.stroke.at("paint", default: black),
+                         format-label(obj, obj.label)),
+                    anchor: "west", padding: 0.12)
           }
         } else if kind == "polygon" {
           line(..obj.points.map(pt => flat(pt.x, pt.y, zof(pt))), close: true,
@@ -492,11 +502,11 @@
                     and kind in ("point", "vector", "vec-3d", "point-3d",
                                  "surface-3d",
                                  "segment", "circle", "arc", "polygon", "text",
-                                 "brace")
+                                 "brace", "polyline")
                     and (obj.at("z", default: none) != none
                          or kind in ("point", "vec-3d", "point-3d", "surface-3d",
                                      "segment", "circle", "arc", "polygon",
-                                     "text", "brace")))
+                                     "text", "brace", "polyline")))
         if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
       } else {
         // Anything that is not one of our geometry dictionaries is drawn as

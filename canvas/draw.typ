@@ -713,6 +713,19 @@
   nx * calc.cos(want) + ny * calc.sin(want) < 0
 }
 
+/// Draw a path through a list of points
+#let draw-polyline(obj, theme) = {
+  import cetz.draw: *
+  let style = get-line-style(obj, theme)
+  let pts = obj.points.map(p => (p.x, p.y))
+  line(..pts, close: obj.at("close", default: false), stroke: style.stroke)
+  if obj.at("label", default: none) != none {
+    content(pts.last(), text(fill: style.stroke.at("paint", default: black),
+                             format-label(obj, obj.label)),
+            anchor: "west", padding: 0.12)
+  }
+}
+
 /// Draw a curly brace spanning two points
 #let draw-brace(obj, theme) = {
 import cetz.draw: *
@@ -1545,6 +1558,8 @@ if obj.at("label", default: none) != none {
     draw-curve-obj(obj, theme)
   } else if t == "brace" {
     draw-brace(obj, theme)
+  } else if t == "polyline" {
+    draw-polyline(obj, theme)
   } else if t == "text" {
     draw-text-at(obj, theme)
   }
