@@ -292,6 +292,31 @@
           line(..facet.corners.map(at), close: true,
                fill: fill-col, stroke: obj.stroke)
         }
+      } else if kind == "brace-3d" {
+        let col = if obj.color == auto { vec-col } else { obj.color }
+        let a = at(obj.from)
+        let b = at(obj.to)
+        cetz.decorations.brace(
+          a, b,
+          amplitude: obj.amplitude,
+          flip: obj.flip,
+          stroke: (paint: col, thickness: 1pt),
+        )
+        if obj.label != none {
+          // Out along the brace's own normal, so the label sits clear of the
+          // spike rather than on top of whatever the brace is measuring.
+          let dx = b.at(0) - a.at(0)
+          let dy = b.at(1) - a.at(1)
+          let len = calc.sqrt(dx * dx + dy * dy)
+          let (nx, ny) = if len > 0 { (-dy / len, dx / len) } else { (0, 1) }
+          let sign = if obj.flip { -1 } else { 1 }
+          let push = (obj.amplitude + obj.label-offset) * sign
+          content(
+            ((a.at(0) + b.at(0)) / 2 + nx * push,
+             (a.at(1) + b.at(1)) / 2 + ny * push),
+            text(fill: col, obj.label),
+          )
+        }
       } else if kind in ("vector", "vec-3d") {
         let from = obj.at("origin", default: (0, 0, 0))
         let to = if kind == "vec-3d" {
@@ -318,9 +343,10 @@
         // style this module has.
         let kind = obj.at("type", default: "")
         let is3d = (not legacy-view
-                    and kind in ("point", "vector", "vec-3d", "point-3d", "surface-3d")
+                    and kind in ("point", "vector", "vec-3d", "point-3d",
+                                 "surface-3d", "brace-3d")
                     and (obj.at("z", default: none) != none
-                         or kind in ("vec-3d", "point-3d", "surface-3d")))
+                         or kind in ("vec-3d", "point-3d", "surface-3d", "brace-3d")))
         if is3d { draw-3d(obj) } else { draw-geo(obj, theme, bounds: bounds) }
       } else if type(obj) == array {
         // Handle arrays of objects (e.g., from vec-add, vec-components)
@@ -381,6 +407,31 @@
   shade: shade,
   light: light,
   stroke: stroke,
+)
+
+/// A curly brace spanning two points in space, for measuring something.
+///
+/// The brace itself is flat -- it is an annotation drawn over the picture,
+/// not an object in it -- so only its endpoints are projected.  That is what
+/// you want: a dimension marker should keep its shape whatever the camera is
+/// doing, the way one does on a drafting sheet.
+#let brace-3d(
+  from,
+  to,
+  label: none,
+  amplitude: 0.4,
+  flip: false,
+  color: auto,
+  label-offset: 0.35,
+) = (
+  type: "brace-3d",
+  from: from,
+  to: to,
+  label: label,
+  amplitude: amplitude,
+  flip: flip,
+  color: color,
+  label-offset: label-offset,
 )
 
 #let draw-vec-3d(

@@ -15,7 +15,7 @@
 #import "polar.typ": polar-canvas as polar-canvas-impl
 #import "space.typ": (
   draw-point-3d as draw-point-3d-impl, draw-vec-3d as draw-vec-3d-impl, space-canvas as space-canvas-impl,
-  surface-3d,
+  surface-3d, brace-3d,
 )
 #import "blank.typ": blank-canvas as blank-canvas-impl, simple-canvas as simple-canvas-impl
 #import "vector.typ": (
