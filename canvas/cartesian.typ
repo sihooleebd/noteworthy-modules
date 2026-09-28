@@ -395,13 +395,17 @@
     let num = calc.quo(n, g)
     let denom = calc.quo(d, g)
 
-    text(fill: stroke-col, size: plot-text-size, {
-      if num == 0 { $0$ } else if denom == 1 {
-        if num == 1 { $pi$ } else if num == -1 { $-pi$ } else { $#num pi$ }
-      } else {
-        if num == 1 { $pi / #denom$ } else if num == -1 { $-pi / #denom$ } else { $#num / #denom pi$ }
-      }
-    })
+    // Built as math source so the sign stays outside the fraction and the
+    // coefficient is a math number, not inserted text spaced off from pi
+    let sign = if num < 0 { "-" } else { "" }
+    let n = calc.abs(num)
+    let body = if num == 0 { "0" } else if denom == 1 {
+      if n == 1 { sign + "pi" } else { sign + str(n) + "pi" }
+    } else {
+      if n == 1 { sign + "pi/" + str(denom) } else { sign + str(n) + "/" + str(denom) + " pi" }
+    }
+
+    text(fill: stroke-col, size: plot-text-size, eval(body, mode: "math"))
   }
 
   // Force all text in this canvas to match the stroke color
