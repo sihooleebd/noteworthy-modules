@@ -781,6 +781,28 @@
   }
 }
 
+/// Annotate the plot with the shape OBJ, drawn by BODY.
+///
+/// Everything is cut to the domain except a point that lies in it: a point
+/// on or near the edge -- the end of an interval, a vertex at the corner --
+/// is exactly the one worth marking, and cutting it would leave half a dot
+/// and half its label.  It is drawn whole, and may overhang the axes by its
+/// own radius and label.  A point outside the domain is not drawn at all,
+/// which is what clipping would have done to it anyway.
+#let annotate-shape(obj, bounds, size, body) = {
+  let is-point = type(obj) == dictionary and obj.at("type", default: none) == "point"
+  if is-point and bounds != none {
+    let eps = 1e-9
+    let (x0, x1) = bounds.x
+    let (y0, y1) = bounds.y
+    if x0 - eps <= obj.x and obj.x <= x1 + eps and y0 - eps <= obj.y and obj.y <= y1 + eps {
+      plot.annotate(body, resize: false)
+    }
+  } else {
+    clip-annotate(bounds, size, body)
+  }
+}
+
 #let draw-raw(obj, bounds: none, size: none) = {
   if type(obj) == type([]) {
     panic(

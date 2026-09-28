@@ -4,7 +4,7 @@
 
 #import "@preview/cetz:0.4.2"
 #import "@preview/cetz-plot:0.1.3": plot
-#import "draw.typ": clip-annotate, draw-data-series-obj, draw-func-obj, draw-geo, format-label, draw-raw
+#import "draw.typ": annotate-shape, clip-annotate, draw-data-series-obj, draw-func-obj, draw-geo, format-label, draw-raw
 
 /// Create a Cartesian (rectangular) coordinate canvas
 /// Renders geometry objects with x-y axes.
@@ -239,7 +239,7 @@
               // Skip - handled by vec-add/vec-project
             } else if t != none {
               let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-              clip-annotate(bounds, final-size, {
+              annotate-shape(obj, bounds, final-size, {
                 draw-geo(obj, theme, bounds: bounds, aspect: aspect)
               })
             }
@@ -265,7 +265,7 @@
                   // Skip
                 } else {
                   let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-                  clip-annotate(bounds, final-size, {
+                  annotate-shape(sub-obj, bounds, final-size, {
                     draw-geo(sub-obj, theme, bounds: bounds, aspect: aspect)
                   })
                 }
@@ -465,12 +465,12 @@
             } else if (
               t != none
             ) {
-              clip-annotate(bounds, final-size, { draw-geo(obj, theme, bounds: bounds) })
+              annotate-shape(obj, bounds, final-size, { draw-geo(obj, theme, bounds: bounds) })
             }
           } else if type(obj) == array {
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
-                clip-annotate(bounds, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
+                annotate-shape(sub-obj, bounds, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
               } else if sub-obj != none {
                 draw-raw(sub-obj, bounds: bounds, size: final-size)
               }
