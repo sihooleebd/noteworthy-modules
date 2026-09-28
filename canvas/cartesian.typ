@@ -432,6 +432,17 @@
       legend-style: (fill: theme.at("page-fill", default: none), stroke: stroke-col),
 
       {
+        // Add corner points to ensure plot bounds are respected.
+        // This also serves as a workaround for a cetz-plot annotation crash.
+        plot.add(
+          (
+            (x-domain.at(0), y-domain.at(0)),
+            (x-domain.at(1), y-domain.at(1)),
+          ),
+          style: (stroke: none),
+          mark: none,
+        )
+
         let bounds = (x: x-domain, y: y-domain)
         for obj in objs {
           if type(obj) == dictionary {
