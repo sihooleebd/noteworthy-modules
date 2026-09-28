@@ -18,7 +18,7 @@
 /// in that order.  That is a painter's algorithm: correct for a convex shape
 /// like a cone or a sphere, and wrong only where facets genuinely interleave.
 ///
-/// `shade' darkens each facet by how far its normal turns from the light,
+/// `shade` darkens each facet by how far its normal turns from the light,
 /// which is flat Lambert shading -- enough to read as a solid, with none of
 /// the machinery real shading would need.
 #let surface(

@@ -13,8 +13,8 @@
   if is-geo-object(obj) { obj.type } else { none }
 }
 
-/// True for a Typst angle value (30deg, calc.pi / 3 * 1rad)
-/// Written as `type(0deg)' because `shape.angle' shadows the type's name
+/// True for a Typst angle value (`30deg`, `calc.pi / 3 * 1rad`)
+/// Written as `type(0deg)` because `shape.angle` shadows the type's name
 #let is-angle-value(v) = type(v) == type(0deg)
 
 /// Convert polar coordinates to Cartesian

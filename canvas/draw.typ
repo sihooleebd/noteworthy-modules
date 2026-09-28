@@ -51,9 +51,9 @@
 
 /// The colour of a stroke, however it was written
 ///
-/// A stroke may be a dictionary, a bare colour (`style: (stroke: red)'), or a
-/// stroke value (`2pt + red'); only the first answers to `.at("paint")', and
-/// asking the others raised "type color has no method `at'".
+/// A stroke may be a dictionary, a bare colour (`style: (stroke: red)`), or a
+/// stroke value (`2pt + red`); only the first answers to `.at("paint")`, and
+/// asking the others raised "type color has no method `at`".
 #let stroke-paint(st, default: black) = {
   if st == none { default }
   else if type(st) == color { st }
@@ -683,7 +683,7 @@
 /// A canvas takes our geometry dictionaries, but nothing stopped anyone from
 /// handing it a cetz element straight -- and every plot-based canvas dropped
 /// those without a word.  They are functions rather than dictionaries, and a
-/// plot has to be told to place them in data coordinates, hence `annotate'.
+/// plot has to be told to place them in data coordinates, hence `annotate`.
 // =====================================================
 // Clipping
 // =====================================================
@@ -737,7 +737,7 @@
 }
 
 /// Draw BODY, an annotation of a plot of the given SIZE (canvas units) over
-/// BOUNDS (`(x: (min, max), y: (min, max))' in data coordinates), cut to
+/// BOUNDS (`(x: (min, max), y: (min, max))` in data coordinates), cut to
 /// those bounds.
 #let clip-to(bounds, size, body) = (ctx => {
   let body = if type(body) == array { body } else { (body,) }
@@ -768,9 +768,9 @@
   )
 },)
 
-/// `plot.annotate', cut to BOUNDS -- `(x: (min, max), y: (min, max))' in data
+/// `plot.annotate`, cut to BOUNDS -- `(x: (min, max), y: (min, max))` in data
 /// coordinates -- on a plot SIZE canvas units large.  Without either it is
-/// `plot.annotate' unchanged.
+/// `plot.annotate` unchanged.
 #let clip-annotate(bounds, size, body) = {
   if bounds == none or size == none {
     plot.annotate(body)

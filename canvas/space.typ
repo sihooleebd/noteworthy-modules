@@ -39,8 +39,8 @@
 
 /// A 3D point as page coordinates.
 ///
-/// Under `perspective' the scale is 1 at the origin and grows towards the
-/// camera, so `distance' reads as "how far away the eye is, in scene units":
+/// Under `perspective` the scale is 1 at the origin and grows towards the
+/// camera, so `distance` reads as "how far away the eye is, in scene units":
 /// large is nearly flat, small exaggerates.
 #let _project(p, cam, projection, distance) = {
   let v = if type(p) == array {
@@ -78,15 +78,15 @@
 /// - view: Deprecated raw Euler angles (x:, y:, z:); see the camera note
 /// - step: Grid line spacing (default: 1)
 /// - x-label, y-label, z-label: Axis labels
-/// - axis-dir: Which way an axis points, e.g. `(y: -1)' (default: all +1)
+/// - axis-dir: Which way an axis points, e.g. `(y: -1)` (default: all +1)
 /// - show-axes: Whether to show axes (default: true)
 /// - show-grid: Whether to show XY grid (default: true)
 /// - show-ticks: Whether to show tick marks (default: false)
 /// - size: Drawing extent as (x, y) or (x, y, z) in canvas units, the way
-///   `cartesian-canvas' takes it: each domain is mapped onto that many units,
+///   `cartesian-canvas` takes it: each domain is mapped onto that many units,
 ///   so the picture's size stops depending on what the domains happen to be.
 ///   A two-entry size scales z with x, which keeps the vertical honest.
-///   Default `none' -- one scene unit is one canvas unit.
+///   Default `none` -- one scene unit is one canvas unit.
 /// - length: Size of one canvas unit (default: 1cm), for scaling the whole
 ///   drawing without changing its proportions.
 /// - ..objects: Geometry objects to render

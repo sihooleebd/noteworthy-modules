@@ -59,7 +59,7 @@
 ///
 /// A third coordinate is kept rather than dropped, so every shape built out
 /// of points can be given one and placed off the ground plane.  The flat
-/// canvases read `.x' and `.y' and are unaffected; `space-canvas' reads `.z'.
+/// canvases read `.x` and `.y` and are unaffected; `space-canvas` reads `.z`.
 #let as-point(p) = {
   if is-point(p) { p } else { point(p.at(0), p.at(1), z: p.at(2, default: none)) }
 }
@@ -130,7 +130,7 @@
 
 /// Put a body at a coordinate -- a point that shows text instead of a dot
 ///
-/// `cartesian-canvas' draws the objects it is given and ignores bare
+/// `cartesian-canvas` draws the objects it is given and ignores bare
 /// content, so this is how a note, a formula or a stray letter gets into a
 /// plot.
 ///

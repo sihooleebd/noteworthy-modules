@@ -22,7 +22,7 @@
 ///   angle(0deg, (0, 0), 60deg, radius: 2.5)        // by angle
 ///
 /// Angles are taken literally -- the sweep runs counterclockwise from the
-/// first to the second, so 0deg to 300deg is the 300deg one.  Pass `reflex'
+/// first to the second, so 0deg to 300deg is the 300deg one.  Pass `reflex`
 /// to override that.
 #let angle(p1, vertex, p2, label: none, radius: 0.5, label-radius: auto, fill: auto, style: auto, reflex: "auto") = {
   let vtx = as-point(vertex)

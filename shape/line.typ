@@ -193,17 +193,17 @@
 /// A curly brace spanning two points, for measuring something
 ///
 /// The brace is an annotation drawn over the picture rather than an object
-/// in it: `amplitude' is how far its spike stands off the span, and `angle'
+/// in it: `amplitude` is how far its spike stands off the span, and `angle`
 /// says which way it leans out.  The label sits clear of the spike.
 ///
-/// `angle' is a direction on the page -- 0deg right, 90deg up -- and the
+/// `angle` is a direction on the page -- 0deg right, 90deg up -- and the
 /// brace goes to whichever of its two sides points that way.  A brace has
 /// only those two sides, its span being fixed, so the angle chooses between
 /// them rather than setting a bearing.  That is worth saying in a direction
 /// rather than as a flag, because through a camera you cannot tell in
-/// advance which side a flag lands on: `angle: 90deg' is above it on the
-/// page whatever the projection does, while `flip' had to be discovered by
-/// rendering.  Left unset, the brace sits to the left of `from' -> `to'.
+/// advance which side a flag lands on: `angle: 90deg` is above it on the
+/// page whatever the projection does, while `flip` had to be discovered by
+/// rendering.  Left unset, the brace sits to the left of `from` -> `to`.
 ///
 /// Parameters:
 /// - from: One end of the span
@@ -239,10 +239,10 @@
 
 /// A path through a list of points
 ///
-/// `polygon' closes; this does not, which is what a sampled curve wants.
+/// `polygon` closes; this does not, which is what a sampled curve wants.
 /// Chief use is a curve that no flat constructor can express -- a profile in
 /// the xz-plane, a rim lying perpendicular to an axis -- since the points may
-/// carry a z and `space-canvas' puts each one through the camera.
+/// carry a z and `space-canvas` puts each one through the camera.
 ///
 /// Parameters:
 /// - points: The points, in order, as point objects or (x, y) / (x, y, z)
