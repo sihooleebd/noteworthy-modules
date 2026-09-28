@@ -18,6 +18,8 @@
 /// - tick: Radial tick spacing (default: 1)
 /// - margin: Extra margin beyond radius (default: 0.5)
 /// - show-angles: Whether to show angle labels (default: true)
+/// - clip: Cut what is drawn to the domain; points in it are kept whole
+///   (default: true)
 /// - ..objects: Geometry objects to render
 #let polar-canvas(
   theme: (:),
@@ -28,6 +30,7 @@
   tick: 1,
   margin: 0.5,
   show-angles: true,
+  clip: true,
   ..objects,
 ) = {
   // Convert length to cm value (CeTZ units)
@@ -173,6 +176,8 @@
 
         // Draw geometry objects
         let bounds = (x: (-effective-radius, effective-radius), y: (-effective-radius, effective-radius))
+        // What drawing is cut to: the plot square, or nothing when clipping is off.
+        let clip-at = if clip { bounds } else { none }
 
         for obj in objs {
           if type(obj) == dictionary {
@@ -200,18 +205,18 @@
                 y-domain: (-effective-radius, effective-radius),
               )
             } else if t != none {
-              annotate-shape(obj, bounds, final-size, { draw-geo(obj, theme, bounds: bounds) })
+              annotate-shape(obj, clip-at, final-size, { draw-geo(obj, theme, bounds: bounds) })
             }
           } else if type(obj) == array {
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
-                annotate-shape(sub-obj, bounds, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
+                annotate-shape(sub-obj, clip-at, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
               } else if sub-obj != none {
-                draw-raw(sub-obj, bounds: bounds, size: final-size)
+                draw-raw(sub-obj, bounds: clip-at, size: final-size)
               }
             }
           } else if obj != none {
-            draw-raw(obj, bounds: bounds, size: final-size)
+            draw-raw(obj, bounds: clip-at, size: final-size)
           }
         }
       },

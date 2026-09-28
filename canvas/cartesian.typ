@@ -21,6 +21,8 @@
 /// - show-grid: Whether to show grid lines (default: false)
 /// - axis-style: Style of axes - "school-book", "scientific", or none (default: "school-book")
 /// - axis-label: Labels for the axes as a tuple (x-label, y-label) (default: `($x$, $y$)`)
+/// - clip: Cut what is drawn to the domain; points in it are kept whole
+///   (default: true)
 /// - ..objects: Geometry objects to render
 #let cartesian-canvas(
   theme: (:),
@@ -34,6 +36,7 @@
   show-grid: false,
   axis-style: "school-book",
   axis-label: ($x$, $y$),
+  clip: true,
   ..objects,
 ) = {
   // Compute actual size from width/height or size tuple
@@ -197,6 +200,8 @@
         )
 
         let bounds = (x: x-domain, y: y-domain)
+        // What drawing is cut to: the domain, or nothing when clipping is off.
+        let clip-at = if clip { bounds } else { none }
 
         for obj in objs {
           if type(obj) == dictionary {
@@ -220,7 +225,7 @@
                 obj + (style: (stroke: auto-color))
               } else { obj }
               let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-              clip-annotate(bounds, final-size, { draw-geo(styled-obj + (label: none), theme, bounds: bounds, aspect: aspect) })
+              clip-annotate(clip-at, final-size, { draw-geo(styled-obj + (label: none), theme, bounds: bounds, aspect: aspect) })
               // Add legend entry if label present
               if obj.at("label", default: none) != none {
                 let pts = obj.points
@@ -239,7 +244,7 @@
               // Skip - handled by vec-add/vec-project
             } else if t != none {
               let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-              annotate-shape(obj, bounds, final-size, {
+              annotate-shape(obj, clip-at, final-size, {
                 draw-geo(obj, theme, bounds: bounds, aspect: aspect)
               })
             }
@@ -265,16 +270,16 @@
                   // Skip
                 } else {
                   let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-                  annotate-shape(sub-obj, bounds, final-size, {
+                  annotate-shape(sub-obj, clip-at, final-size, {
                     draw-geo(sub-obj, theme, bounds: bounds, aspect: aspect)
                   })
                 }
               } else if sub-obj != none {
-                draw-raw(sub-obj, bounds: bounds, size: final-size)
+                draw-raw(sub-obj, bounds: clip-at, size: final-size)
               }
             }
           } else if obj != none {
-            draw-raw(obj, bounds: bounds, size: final-size)
+            draw-raw(obj, bounds: clip-at, size: final-size)
           }
         }
       },
@@ -290,6 +295,7 @@
   height: none,
   x-domain: (-5, 5),
   y-domain: (-5, 5),
+  clip: true,
   ..funcs,
 ) = {
   cartesian-canvas(
@@ -300,6 +306,7 @@
     x-domain: x-domain,
     y-domain: y-domain,
     axis-style: "school-book",
+    clip: clip,
     ..funcs,
   )
 }
@@ -313,6 +320,7 @@
   x-domain: (-2 * calc.pi, 2 * calc.pi),
   y-domain: (-2, 2),
   pi-divisor: 2, // Tick every π/pi-divisor
+  clip: true, // cut what is drawn to the domain
   ..objects,
 ) = {
   // Convert length to cm value (CeTZ units)
@@ -448,6 +456,8 @@
         )
 
         let bounds = (x: x-domain, y: y-domain)
+        // What drawing is cut to: the domain, or nothing when clipping is off.
+        let clip-at = if clip { bounds } else { none }
         for obj in objs {
           if type(obj) == dictionary {
             let t = obj.at("type", default: none)
@@ -465,18 +475,18 @@
             } else if (
               t != none
             ) {
-              annotate-shape(obj, bounds, final-size, { draw-geo(obj, theme, bounds: bounds) })
+              annotate-shape(obj, clip-at, final-size, { draw-geo(obj, theme, bounds: bounds) })
             }
           } else if type(obj) == array {
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
-                annotate-shape(sub-obj, bounds, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
+                annotate-shape(sub-obj, clip-at, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
               } else if sub-obj != none {
-                draw-raw(sub-obj, bounds: bounds, size: final-size)
+                draw-raw(sub-obj, bounds: clip-at, size: final-size)
               }
             }
           } else if obj != none {
-            draw-raw(obj, bounds: bounds, size: final-size)
+            draw-raw(obj, bounds: clip-at, size: final-size)
           }
         }
       },
