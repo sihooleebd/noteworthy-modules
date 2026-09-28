@@ -4,7 +4,7 @@
 
 #import "@preview/cetz:0.4.2"
 #import "@preview/cetz-plot:0.1.3": plot
-#import "draw.typ": draw-data-series-obj, draw-func-obj, draw-geo, draw-raw
+#import "draw.typ": clip-annotate, draw-data-series-obj, draw-func-obj, draw-geo, draw-raw
 
 /// Create a polar coordinate canvas
 /// Renders geometry objects with circular grid and radial lines.
@@ -200,18 +200,18 @@
                 y-domain: (-effective-radius, effective-radius),
               )
             } else if t != none {
-              plot.annotate({ draw-geo(obj, theme, bounds: bounds) })
+              clip-annotate(bounds, final-size, { draw-geo(obj, theme, bounds: bounds) })
             }
           } else if type(obj) == array {
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
-                plot.annotate({ draw-geo(sub-obj, theme, bounds: bounds) })
+                clip-annotate(bounds, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
               } else if sub-obj != none {
-                draw-raw(sub-obj)
+                draw-raw(sub-obj, bounds: bounds, size: final-size)
               }
             }
           } else if obj != none {
-            draw-raw(obj)
+            draw-raw(obj, bounds: bounds, size: final-size)
           }
         }
       },

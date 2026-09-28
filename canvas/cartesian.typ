@@ -4,7 +4,7 @@
 
 #import "@preview/cetz:0.4.2"
 #import "@preview/cetz-plot:0.1.3": plot
-#import "draw.typ": draw-data-series-obj, draw-func-obj, draw-geo, format-label, draw-raw
+#import "draw.typ": clip-annotate, draw-data-series-obj, draw-func-obj, draw-geo, format-label, draw-raw
 
 /// Create a Cartesian (rectangular) coordinate canvas
 /// Renders geometry objects with x-y axes.
@@ -220,7 +220,7 @@
                 obj + (style: (stroke: auto-color))
               } else { obj }
               let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-              plot.annotate({ draw-geo(styled-obj + (label: none), theme, bounds: bounds, aspect: aspect) })
+              clip-annotate(bounds, final-size, { draw-geo(styled-obj + (label: none), theme, bounds: bounds, aspect: aspect) })
               // Add legend entry if label present
               if obj.at("label", default: none) != none {
                 let pts = obj.points
@@ -239,7 +239,7 @@
               // Skip - handled by vec-add/vec-project
             } else if t != none {
               let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-              plot.annotate({
+              clip-annotate(bounds, final-size, {
                 draw-geo(obj, theme, bounds: bounds, aspect: aspect)
               })
             }
@@ -265,16 +265,16 @@
                   // Skip
                 } else {
                   let aspect = (x-domain, y-domain, final-size.at(0), final-size.at(1))
-                  plot.annotate({
+                  clip-annotate(bounds, final-size, {
                     draw-geo(sub-obj, theme, bounds: bounds, aspect: aspect)
                   })
                 }
               } else if sub-obj != none {
-                draw-raw(sub-obj)
+                draw-raw(sub-obj, bounds: bounds, size: final-size)
               }
             }
           } else if obj != none {
-            draw-raw(obj)
+            draw-raw(obj, bounds: bounds, size: final-size)
           }
         }
       },
@@ -465,18 +465,18 @@
             } else if (
               t != none
             ) {
-              plot.annotate({ draw-geo(obj, theme, bounds: bounds) })
+              clip-annotate(bounds, final-size, { draw-geo(obj, theme, bounds: bounds) })
             }
           } else if type(obj) == array {
             for sub-obj in obj {
               if type(sub-obj) == dictionary and sub-obj.at("type", default: none) != none {
-                plot.annotate({ draw-geo(sub-obj, theme, bounds: bounds) })
+                clip-annotate(bounds, final-size, { draw-geo(sub-obj, theme, bounds: bounds) })
               } else if sub-obj != none {
-                draw-raw(sub-obj)
+                draw-raw(sub-obj, bounds: bounds, size: final-size)
               }
             }
           } else if obj != none {
-            draw-raw(obj)
+            draw-raw(obj, bounds: bounds, size: final-size)
           }
         }
       },

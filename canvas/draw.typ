@@ -684,14 +684,111 @@
 /// handing it a cetz element straight -- and every plot-based canvas dropped
 /// those without a word.  They are functions rather than dictionaries, and a
 /// plot has to be told to place them in data coordinates, hence `annotate'.
-#let draw-raw(obj) = {
+// =====================================================
+// Clipping
+// =====================================================
+//
+// A canvas shows its domain and nothing past it.  cetz has no clip, so this
+// makes one: it runs its body the way the canvas would, then draws the
+// resulting paths and text itself, inside a Typst `box(clip: true)' exactly
+// the size of the rectangle, and hands the canvas that box as a single piece
+// of content.  Everything is cut at the edge -- a circle straddling it keeps
+// its visible arc, a filled polygon its visible part, an arrowhead or label
+// half outside is half drawn -- rather than whole shapes being kept or
+// dropped.
+//
+// Inside `plot.annotate' a body is drawn in plain data coordinates, and
+// cetz-plot maps each point of the finished drawables into the plot only
+// afterwards -- a content drawable just has its centre moved.  So the pane
+// has to be drawn at its final page scale from the start, which the domain,
+// the canvas `size' and the canvas length together fix: one data unit in x
+// is `size.x / (x-max - x-min)' canvas units, and data y runs up the page.
+
+#let _render-drawable(d, map, sx) = {
+  if d.type == "path" {
+    let verts = ()
+    for (origin, closed, segments) in d.segments {
+      verts.push(curve.move(map(origin)))
+      for (kind, ..args) in segments {
+        if kind == "l" {
+          for p in args { verts.push(curve.line(map(p))) }
+        } else if kind == "c" {
+          verts.push(curve.cubic(..args.map(map)))
+        }
+      }
+      if closed { verts.push(curve.close(mode: "straight")) }
+    }
+    let stroke = d.stroke
+    // A bare number is a thickness in canvas units, as `cetz.canvas' reads it.
+    if type(stroke) == dictionary and "thickness" in stroke and type(stroke.thickness) != std.length {
+      stroke.thickness *= sx
+    }
+    place(top + left, std.curve(
+      stroke: stroke,
+      fill: d.fill,
+      fill-rule: d.at("fill-rule", default: "non-zero"),
+      ..verts,
+    ))
+  } else if d.type == "content" {
+    let (width: w, height: h) = measure(d.body)
+    let (x, y) = map(d.pos)
+    place(top + left, dx: x - w / 2, dy: y - h / 2, d.body)
+  }
+}
+
+/// Draw BODY, an annotation of a plot of the given SIZE (canvas units) over
+/// BOUNDS (`(x: (min, max), y: (min, max))' in data coordinates), cut to
+/// those bounds.
+#let clip-to(bounds, size, body) = (ctx => {
+  let body = if type(body) == array { body } else { (body,) }
+  let (ctx: inner, drawables: ds) = cetz.process.many(ctx, body)
+  let ds = cetz.drawable.filter-tagged(ds, cetz.drawable.TAG.hidden)
+    .sorted(key: d => d.at("z-index", default: 0))
+  let (x0, x1) = bounds.x
+  let (y0, y1) = bounds.y
+  let len = ctx.length
+  let sx = size.at(0) / (x1 - x0) * len
+  let sy = size.at(1) / (y1 - y0) * len
+  let map((x, y, ..)) = ((x - x0) * sx, (y1 - y) * sy)
+  let pane = box(width: size.at(0) * len, height: size.at(1) * len, clip: true, {
+    for d in ds { _render-drawable(d, map, len) }
+  })
+  let border = (((x0, y0, 0.0), true, (
+    ("l", (x1, y0, 0.0)), ("l", (x1, y1, 0.0)), ("l", (x0, y1, 0.0)))),)
+  // The inner context goes back out, so a name given to something inside
+  // stays reachable after it.  The size is the plot's own, in canvas units:
+  // cetz-plot moves a content drawable's centre into the plot but leaves its
+  // width and height alone, and the canvas sizes itself from them -- given in
+  // data units, a domain wider than the plot padded the canvas with blank
+  // space.
+  (
+    ctx: inner,
+    drawables: (cetz.drawable.content(((x0 + x1) / 2, (y0 + y1) / 2, 0.0),
+                                      size.at(0), size.at(1), border, pane),),
+  )
+},)
+
+/// `plot.annotate', cut to BOUNDS -- `(x: (min, max), y: (min, max))' in data
+/// coordinates -- on a plot SIZE canvas units large.  Without either it is
+/// `plot.annotate' unchanged.
+#let clip-annotate(bounds, size, body) = {
+  if bounds == none or size == none {
+    plot.annotate(body)
+  } else {
+    // Never resizing: the pane is the domain by construction, and nothing in
+    // it may widen the axes.
+    plot.annotate(clip-to(bounds, size, body), resize: false)
+  }
+}
+
+#let draw-raw(obj, bounds: none, size: none) = {
   if type(obj) == type([]) {
     panic(
       "canvas: bare content has nowhere to go -- wrap it in "
         + "shape.text-at((x, y), [..]) to say where it belongs",
     )
   }
-  plot.annotate({ if type(obj) == array { obj } else { (obj,) } })
+  clip-annotate(bounds, size, { if type(obj) == array { obj } else { (obj,) } })
 }
 
 /// Draw a body at a coordinate
