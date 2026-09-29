@@ -98,7 +98,7 @@
 /// - l2: Second line
 /// - label: Optional label
 /// - radius: Display radius
-#let angle-between-lines(l1, l2, label: none, radius: 0.5, style: auto) = {
+#let angle-between-lines(l1, l2, label: none, radius: 0.5, fill: auto, style: auto) = {
   // Find intersection point (vertex)
   // For now, assume they share p1
   let vertex = l1.p1
@@ -107,7 +107,7 @@
   let pt1 = l1.p2
   let pt2 = l2.p2
 
-  angle(pt1, vertex, pt2, label: label, radius: radius, style: style)
+  angle(pt1, vertex, pt2, label: label, radius: radius, fill: fill, style: style)
 }
 
 /// Check if object is an angle
