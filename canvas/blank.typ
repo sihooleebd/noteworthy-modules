@@ -15,7 +15,8 @@
 ///
 /// Parameters:
 /// - theme: Theme dictionary for styling
-/// - size: Canvas dimensions (default: auto)
+/// - size: (width, height) in cm to fit the drawing into, keeping its aspect
+///   ratio; a bare number is a width.  auto draws one unit to the centimetre.
 /// - ..objects: Geometry objects to render
 #let blank-canvas(
   theme: (:),
@@ -57,7 +58,9 @@
   let sorted = vec-with-angles.sorted(key: va => va.angle)
   let all-angles = sorted.map(va => va.angle)
 
-  cetz.canvas({
+  let render(length) = cetz.canvas(length: length, {
+    // pill sizes below are in centimetres whatever the unit
+    let k = 1cm / length
     import cetz.draw: *
     import "draw.typ": compute-vector-label-pos, draw-geo, format-label
 
@@ -107,15 +110,15 @@
       if v.at("label", default: none) != none {
         let mx = (sx + ex) / 2
         let my = (sy + ey) / 2
-        let pill-half-width = 0.3
+        let pill-half-width = 0.3 * k
 
         // Background pill
         rect(
-          (mx - pill-half-width, my - 0.18),
-          (mx + pill-half-width, my + 0.18),
+          (mx - pill-half-width, my - 0.18 * k),
+          (mx + pill-half-width, my + 0.18 * k),
           fill: bg-col,
           stroke: (paint: v-col, thickness: 0.5pt),
-          radius: 0.1,
+          radius: 0.1 * k,
         )
 
         content(
@@ -126,6 +129,19 @@
       }
     }
   })
+
+  if size == auto { return render(1cm) }
+  // A blank canvas has no domain to map onto `size', so draw it once at the
+  // default unit, measure, and draw again with the unit scaled to fit.  The
+  // unit is what changes, not the picture, so text keeps its size.
+  let (w, h) = if type(size) == array { size } else { (size, none) }
+  context {
+    let m = measure(render(1cm))
+    let fits = ()
+    if w != none and m.width > 0pt { fits.push(w * 1cm / m.width) }
+    if h != none and m.height > 0pt { fits.push(h * 1cm / m.height) }
+    if fits.len() == 0 { render(1cm) } else { render(calc.min(..fits) * 1cm) }
+  }
 }
 
 /// Create a simple canvas with custom drawing commands

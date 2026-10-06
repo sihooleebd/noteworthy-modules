@@ -510,13 +510,20 @@
                   fill: obj.fill, frame: obj.frame, stroke: none)
         }
       } else if kind in ("vector", "vec-3d") {
-        let from = obj.at("origin", default: (0, 0, 0))
-        let to = if kind == "vec-3d" {
-          obj.end
+        // A `vector' is an offset from its origin, as it is on the flat
+        // canvases; only `vec-3d' carries absolute start and end points.
+        let o = obj.at("origin", default: (0, 0, 0))
+        let o = if type(o) == dictionary {
+          (o.x, o.y, o.at("z", default: none))
+        } else { o }
+        let from = (o.at(0), o.at(1), o.at(2, default: none))
+        let from = from.map(c => if c == none { 0 } else { c })
+        let (from, to) = if kind == "vec-3d" {
+          (obj.at("start", default: (0, 0, 0)), obj.end)
         } else {
-          (obj.x, obj.y, obj.at("z", default: 0))
+          (from, (from.at(0) + obj.x, from.at(1) + obj.y,
+                  from.at(2) + if obj.at("z", default: none) == none { 0 } else { obj.z }))
         }
-        let from = if kind == "vec-3d" { obj.at("start", default: (0, 0, 0)) } else { from }
         let col = if obj.at("color", default: auto) == auto { vec-col } else { obj.color }
         line(at(from), at(to), stroke: (paint: col, thickness: 1.5pt),
              mark: (end: "stealth", fill: col))
