@@ -35,6 +35,11 @@
 }
 
 
+// A title may be a string or content: `[Momentum of $m v$]' can hold math,
+// which a string cannot.  An empty one, `[]', is no title, as "" is -- or the
+// heading would end in a bare "|".
+#let _block-title(t) = if t == none or t == [] or t == [ ] { "" } else { t }
+
 #let create-block(config, ..args, label: none) = {
   let pos = args.pos()
   assert(
@@ -57,6 +62,7 @@
   } else {
     body = pos.at(0)
   }
+  title = _block-title(title)
   let kind = lower(config.title)
   let number = nw-block-number(kind, given: given)
   // What the build's first pass will read back for the label map, and what
@@ -101,6 +107,7 @@
     body = pos.at(2)
     number = pos.at(1)
   }
+  name = _block-title(name)
 
   // Counted within the block that is actually open, which the stack knows.
   // The old reading -- `<solution>' elements since the last `<block-start>'
@@ -141,6 +148,7 @@
   } else {
     body = pos.at(0)
   }
+  name = _block-title(name)
   // Numbered like any other block.  It used to print none at all, which read
   // as a gap beside a numbered theorem and, worse, left a labelled proof with
   // nothing to be referenced by: an unnamed one came out as bare "Proof".
